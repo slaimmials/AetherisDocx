@@ -307,7 +307,7 @@ end`
 
 const LANGS = {
   ru: {
-    "title-main": "Lua API — Документация",
+    "title-main": "CSLua API — Документация",
     "nav-functions": "Функции",
     "nav-classes": "Классы",
     "nav-examples": "Примеры",
@@ -336,7 +336,7 @@ const LANGS = {
     "example-localplayer": "Проверить локального игрока"
   },
   en: {
-    "title-main": "Lua API — Documentation",
+    "title-main": "CSLua API — Documentation",
     "nav-functions": "Functions",
     "nav-classes": "Classes",
     "nav-examples": "Examples",
