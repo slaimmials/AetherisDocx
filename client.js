@@ -236,10 +236,10 @@ const docStructs = [
   {
     name: "Color",
     fields: [
-      { name: "r", type: "uint8_t" },
-      { name: "g", type: "uint8_t" },
-      { name: "b", type: "uint8_t" },
-      { name: "a", type: "uint8_t" }
+      { name: "r", type: "float", desc: {ru:"Красный",en:"Red"} },
+      { name: "g", type: "float", desc: {ru:"Зелёный",en:"Green"} },
+      { name: "b", type: "float", desc: {ru:"Синий",en:"Blue"} },
+      { name: "a", type: "float", desc: {ru:"Прозрачность",en:"Alpha"}  }
     ]
   },
   {
@@ -292,10 +292,7 @@ const docStructs = [
     methods: [
       { name: "LocalPlayer", args: [], returns: "Player", desc: {ru:"Локальный игрок", en:"Local player"} },
       { name: "GetPlayers", 
-        args: [
-          {name:"skipLocal",type:"bool"},
-          {name:"test",type:"float"},
-        ], 
+        args: [],
         returns: "table<Player>", 
         desc: {ru:"Список игроков", en:"List of players"} 
       }
