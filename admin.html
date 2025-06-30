@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Админка CSLua API</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <style>
+    body { background: #212733; color: #fff; font-family: Arial, sans-serif; }
+    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
+    .tab-btn { background: #31363c; border: none; color: #fff; padding: 8px 18px; cursor: pointer; border-radius: 5px 5px 0 0; }
+    .tab-btn.active { background: #262a33; font-weight: bold; }
+    .section { display: none; }
+    .section.active { display: block; }
+    .entity-list { margin-bottom: 20px; }
+    .entity-item { padding: 7px 0; border-bottom: 1px solid #333; }
+    .entity-item:last-child { border-bottom: none; }
+    .btn { background: #39404a; color: #fff; border: none; padding: 5px 13px; border-radius: 4px; cursor: pointer; margin-left: 7px; }
+    .btn-danger { background: #c62828; }
+    .form-group { margin-bottom: 10px; }
+    label { display: block; margin-bottom: 3px; }
+    input[type="text"], textarea, select { width: 100%; padding: 5px; font-size: 1em; background: #23272e; color: #fff; border: 1px solid #31363c; border-radius: 3px; }
+    textarea { resize: vertical; min-height: 32px; }
+    .fields-block, .args-block, .methods-block { margin-bottom: 14px; }
+    .inline-group { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
+    .small-btn { padding: 2px 7px; font-size: 0.95em; }
+    .section-title { font-size: 1.2em; margin-bottom: 8px; }
+    .success { color: #81c784; margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+  <h1>CSLua API — Админка</h1>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="functions">Функции</button>
+    <button class="tab-btn" data-tab="structs">Классы</button>
+    <button class="tab-btn" data-tab="examples">Примеры</button>
+  </div>
+
+  <div id="functions" class="section active"></div>
+  <div id="structs" class="section"></div>
+  <div id="examples" class="section"></div>
+
+  <script>
+    let data = {};
+    let editing = null; // {type, index}
+
+    // Load data
+    fetch('apidocu-data.json').then(r => r.json()).then(json => {
+      data = json;
+      renderTab('functions');
+      renderTab('structs');
+      renderTab('examples');
+    });
+
+    // Tabs logic
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+      }
+    });
+
+    function renderTab(tab) {
+      if(tab === 'functions') renderFunctions();
+      if(tab === 'structs') renderStructs();
+      if(tab === 'examples') renderExamples();
+    }
+
+    // FUNCTIONS
+    function renderFunctions() {
+      const cont = document.getElementById('functions');
+      cont.innerHTML = `<div class="section-title">Функции</div>
+        <div class="entity-list">
+          ${data.docFunctions.map((f,i) => `
+            <div class="entity-item">
+              <b>${f.name}</b>
+              <button class="btn small-btn" onclick="editFunction(${i})">✎</button>
+              <button class="btn btn-danger small-btn" onclick="deleteFunction(${i})">⨉</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn" onclick="addFunction()">Добавить функцию</button>
+        <div id="function-form-block"></div>`;
+    }
+    window.renderFunctions = renderFunctions;
+
+    function editFunction(idx) {
+      editing = {type:'function', index: idx};
+      showFunctionForm(data.docFunctions[idx], idx);
+    }
+    function addFunction() {
+      editing = {type:'function', index: null};
+      showFunctionForm({name:'', desc:{ru:'',en:''}, args:[], returns:'', example:''});
+    }
+    function deleteFunction(idx) {
+      if(confirm('Удалить функцию?')) {
+        data.docFunctions.splice(idx,1);
+        renderFunctions();
+      }
+    }
+    window.editFunction = editFunction;
+    window.addFunction = addFunction;
+    window.deleteFunction = deleteFunction;
+
+    function showFunctionForm(f, idx) {
+      const block = document.getElementById('function-form-block');
+      block.innerHTML = `
+        <form onsubmit="return saveFunction(event, ${idx})">
+          <div class="form-group">
+            <label>Имя:</label>
+            <input type="text" required name="name" value="${f.name||''}">
+          </div>
+          <div class="form-group">
+            <label>Описание (ru):</label>
+            <input type="text" name="desc-ru" value="${(f.desc&&f.desc.ru)||''}">
+          </div>
+          <div class="form-group">
+            <label>Описание (en):</label>
+            <input type="text" name="desc-en" value="${(f.desc&&f.desc.en)||''}">
+          </div>
+          <div class="form-group">
+            <label>Возвращает:</label>
+            <input type="text" name="returns" value="${f.returns||''}">
+          </div>
+          <div class="form-group">
+            <label>Пример:</label>
+            <textarea name="example">${f.example||''}</textarea>
+          </div>
+          <div class="form-group args-block">
+            <label>Аргументы:</label>
+            <div id="args">
+              ${(f.args||[]).map((a,j) => `
+                <div class="inline-group">
+                  <input type="text" placeholder="имя" value="${a.name||''}" data-arg="name" data-idx="${j}">
+                  <input type="text" placeholder="тип" value="${a.type||''}" data-arg="type" data-idx="${j}">
+                  <input type="text" placeholder="описание (ru)" value="${(a.desc&&a.desc.ru)||''}" data-arg="desc-ru" data-idx="${j}">
+                  <input type="text" placeholder="описание (en)" value="${(a.desc&&a.desc.en)||''}" data-arg="desc-en" data-idx="${j}">
+                  <button type="button" class="btn btn-danger small-btn" onclick="removeArg(${j})">⨉</button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn small-btn" onclick="addArg()">Добавить аргумент</button>
+          </div>
+          <button class="btn" type="submit">Сохранить</button>
+          <button class="btn btn-danger" type="button" onclick="cancelEdit()">Отмена</button>
+        </form>
+      `;
+      window.removeArg = function(j) {
+        f.args.splice(j,1); showFunctionForm(f, idx);
+      };
+      window.addArg = function() {
+        (f.args||(f.args=[])).push({name:'', type:'', desc:{ru:'',en:''}}); showFunctionForm(f, idx);
+      };
+      // live update on input
+      block.querySelectorAll('input,textarea').forEach(el => {
+        el.oninput = function() {
+          if(el.name === 'name') f.name = el.value;
+          if(el.name === 'desc-ru') (f.desc||(f.desc={})).ru = el.value;
+          if(el.name === 'desc-en') (f.desc||(f.desc={})).en = el.value;
+          if(el.name === 'returns') f.returns = el.value;
+          if(el.name === 'example') f.example = el.value;
+          if(el.dataset.arg) {
+            let j = +el.dataset.idx;
+            let arg = f.args[j];
+            if(el.dataset.arg === 'name') arg.name = el.value;
+            if(el.dataset.arg === 'type') arg.type = el.value;
+            if(el.dataset.arg === 'desc-ru') (arg.desc||(arg.desc={})).ru = el.value;
+            if(el.dataset.arg === 'desc-en') (arg.desc||(arg.desc={})).en = el.value;
+          }
+        }
+      });
+    }
+    window.saveFunction = function(ev, idx) {
+      ev.preventDefault();
+      if(editing.index == null) data.docFunctions.push(editing.temp || data.docFunctions[data.docFunctions.length-1]);
+      renderFunctions();
+      document.getElementById('function-form-block').innerHTML = '<div class="success">Сохранено!</div>';
+      setTimeout(()=>document.getElementById('function-form-block').innerHTML='', 800);
+      editing = null;
+      return false;
+    }
+    window.cancelEdit = function() {
+      document.getElementById('function-form-block').innerHTML = '';
+      editing = null;
+    }
+
+    // STRUCTS
+    function renderStructs() {
+      const cont = document.getElementById('structs');
+      cont.innerHTML = `<div class="section-title">Классы/Структуры</div>
+        <div class="entity-list">
+          ${data.docStructs.map((s,i) => `
+            <div class="entity-item">
+              <b>${s.name}</b>
+              <button class="btn small-btn" onclick="editStruct(${i})">✎</button>
+              <button class="btn btn-danger small-btn" onclick="deleteStruct(${i})">⨉</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn" onclick="addStruct()">Добавить класс/структуру</button>
+        <div id="struct-form-block"></div>`;
+    }
+    window.renderStructs = renderStructs;
+
+    function editStruct(idx) {
+      editing = {type:'struct', index: idx};
+      showStructForm(data.docStructs[idx], idx);
+    }
+    function addStruct() {
+      editing = {type:'struct', index: null};
+      showStructForm({name:'', fields:[], methods:[]});
+    }
+    function deleteStruct(idx) {
+      if(confirm('Удалить класс?')) {
+        data.docStructs.splice(idx,1);
+        renderStructs();
+      }
+    }
+    window.editStruct = editStruct;
+    window.addStruct = addStruct;
+    window.deleteStruct = deleteStruct;
+
+    function showStructForm(s, idx) {
+      const block = document.getElementById('struct-form-block');
+      block.innerHTML = `
+        <form onsubmit="return saveStruct(event, ${idx})">
+          <div class="form-group">
+            <label>Имя:</label>
+            <input type="text" required name="name" value="${s.name||''}">
+          </div>
+          <div class="form-group">
+            <label><input type="checkbox" name="noConstructor" ${s.noConstructor?'checked':''}> Без конструктора</label>
+          </div>
+          <div class="form-group fields-block">
+            <label>Поля:</label>
+            <div id="fields">
+              ${(s.fields||[]).map((f,j) => `
+                <div class="inline-group">
+                  <input type="text" placeholder="имя" value="${f.name||''}" data-field="name" data-idx="${j}">
+                  <input type="text" placeholder="тип" value="${f.type||''}" data-field="type" data-idx="${j}">
+                  <input type="text" placeholder="описание (ru)" value="${(f.desc&&f.desc.ru)||''}" data-field="desc-ru" data-idx="${j}">
+                  <input type="text" placeholder="описание (en)" value="${(f.desc&&f.desc.en)||''}" data-field="desc-en" data-idx="${j}">
+                  <label><input type="checkbox" ${f.private?'checked':''} data-field="private" data-idx="${j}"> private</label>
+                  <button type="button" class="btn btn-danger small-btn" onclick="removeField(${j})">⨉</button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn small-btn" onclick="addField()">Добавить поле</button>
+          </div>
+          <div class="form-group methods-block">
+            <label>Методы:</label>
+            <div id="methods">
+              ${(s.methods||[]).map((m,j) => `
+                <div class="inline-group">
+                  <input type="text" placeholder="имя" value="${m.name||''}" data-method="name" data-idx="${j}">
+                  <input type="text" placeholder="аргументы (через ,)" value="${(m.args||[]).map(a=>a.name).join(',')}" data-method="args" data-idx="${j}">
+                  <input type="text" placeholder="возвращает" value="${m.returns||''}" data-method="returns" data-idx="${j}">
+                  <input type="text" placeholder="описание (ru)" value="${(m.desc&&m.desc.ru)||''}" data-method="desc-ru" data-idx="${j}">
+                  <input type="text" placeholder="описание (en)" value="${(m.desc&&m.desc.en)||''}" data-method="desc-en" data-idx="${j}">
+                  <label><input type="checkbox" ${m.private?'checked':''} data-method="private" data-idx="${j}"> private</label>
+                  <button type="button" class="btn btn-danger small-btn" onclick="removeMethod(${j})">⨉</button>
+                </div>
+              `).join('')}
+            </div>
+            <button type="button" class="btn small-btn" onclick="addMethod()">Добавить метод</button>
+          </div>
+          <button class="btn" type="submit">Сохранить</button>
+          <button class="btn btn-danger" type="button" onclick="cancelEdit()">Отмена</button>
+        </form>
+      `;
+      window.removeField = function(j) {
+        s.fields.splice(j,1); showStructForm(s, idx);
+      };
+      window.addField = function() {
+        (s.fields||(s.fields=[])).push({name:'', type:'', desc:{ru:'',en:''}}); showStructForm(s, idx);
+      };
+      window.removeMethod = function(j) {
+        s.methods.splice(j,1); showStructForm(s, idx);
+      };
+      window.addMethod = function() {
+        (s.methods||(s.methods=[])).push({name:'', args:[], returns:'', desc:{ru:'',en:''}}); showStructForm(s, idx);
+      };
+      // live update fields
+      block.querySelectorAll('input').forEach(el => {
+        el.oninput = function() {
+          if(el.name==='name') s.name = el.value;
+          if(el.name==='noConstructor') s.noConstructor = el.checked;
+          if(el.dataset.field) {
+            let j=+el.dataset.idx, f=s.fields[j];
+            if(el.dataset.field==='name') f.name = el.value;
+            if(el.dataset.field==='type') f.type = el.value;
+            if(el.dataset.field==='desc-ru') (f.desc||(f.desc={})).ru = el.value;
+            if(el.dataset.field==='desc-en') (f.desc||(f.desc={})).en = el.value;
+            if(el.dataset.field==='private') f.private = el.checked;
+          }
+          if(el.dataset.method) {
+            let j=+el.dataset.idx, m=s.methods[j];
+            if(el.dataset.method==='name') m.name = el.value;
+            if(el.dataset.method==='args') m.args = el.value.split(',').map(n=>({name:n.trim()})).filter(a=>a.name);
+            if(el.dataset.method==='returns') m.returns = el.value;
+            if(el.dataset.method==='desc-ru') (m.desc||(m.desc={})).ru = el.value;
+            if(el.dataset.method==='desc-en') (m.desc||(m.desc={})).en = el.value;
+            if(el.dataset.method==='private') m.private = el.checked;
+          }
+        }
+      });
+    }
+    window.saveStruct = function(ev, idx) {
+      ev.preventDefault();
+      if(editing.index == null) data.docStructs.push(editing.temp || data.docStructs[data.docStructs.length-1]);
+      renderStructs();
+      document.getElementById('struct-form-block').innerHTML = '<div class="success">Сохранено!</div>';
+      setTimeout(()=>document.getElementById('struct-form-block').innerHTML='', 800);
+      editing = null;
+      return false;
+    }
+
+    // EXAMPLES
+    function renderExamples() {
+      const cont = document.getElementById('examples');
+      cont.innerHTML = `<div class="section-title">Примеры</div>
+        <div class="entity-list">
+          ${data.docExamples.map((e,i) => `
+            <div class="entity-item">
+              <b>${e.title.ru||e.title.en}</b>
+              <button class="btn small-btn" onclick="editExample(${i})">✎</button>
+              <button class="btn btn-danger small-btn" onclick="deleteExample(${i})">⨉</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn" onclick="addExample()">Добавить пример</button>
+        <div id="example-form-block"></div>`;
+    }
+    window.renderExamples = renderExamples;
+
+    function editExample(idx) {
+      editing = {type:'example', index: idx};
+      showExampleForm(data.docExamples[idx], idx);
+    }
+    function addExample() {
+      editing = {type:'example', index: null};
+      showExampleForm({title:{ru:'',en:''}, code:''});
+    }
+    function deleteExample(idx) {
+      if(confirm('Удалить пример?')) {
+        data.docExamples.splice(idx,1);
+        renderExamples();
+      }
+    }
+    window.editExample = editExample;
+    window.addExample = addExample;
+    window.deleteExample = deleteExample;
+
+    function showExampleForm(e, idx) {
+      const block = document.getElementById('example-form-block');
+      block.innerHTML = `
+        <form onsubmit="return saveExample(event, ${idx})">
+          <div class="form-group">
+            <label>Заголовок (ru):</label>
+            <input type="text" name="title-ru" value="${(e.title&&e.title.ru)||''}">
+          </div>
+          <div class="form-group">
+            <label>Заголовок (en):</label>
+            <input type="text" name="title-en" value="${(e.title&&e.title.en)||''}">
+          </div>
+          <div class="form-group">
+            <label>Код:</label>
+            <textarea name="code">${e.code||''}</textarea>
+          </div>
+          <button class="btn" type="submit">Сохранить</button>
+          <button class="btn btn-danger" type="button" onclick="cancelEdit()">Отмена</button>
+        </form>
+      `;
+      block.querySelectorAll('input,textarea').forEach(el => {
+        el.oninput = function() {
+          if(el.name==='title-ru') (e.title||(e.title={})).ru = el.value;
+          if(el.name==='title-en') (e.title||(e.title={})).en = el.value;
+          if(el.name==='code') e.code = el.value;
+        }
+      });
+    }
+    window.saveExample = function(ev, idx) {
+      ev.preventDefault();
+      if(editing.index == null) data.docExamples.push(editing.temp || data.docExamples[data.docExamples.length-1]);
+      renderExamples();
+      document.getElementById('example-form-block').innerHTML = '<div class="success">Сохранено!</div>';
+      setTimeout(()=>document.getElementById('example-form-block').innerHTML='', 800);
+      editing = null;
+      return false;
+    }
+
+    // Экспорт JSON (для выгрузки!)
+    // Можно повесить кнопку в интерфейс и сохранить как файл через Blob.
+    window.exportJSON = function() {
+      const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'apidocu-data.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  </script>
+  <button onclick="exportJSON()" style="position:fixed;right:24px;top:20px;" class="btn">💾 Экспорт JSON</button>
+</body>
+</html>

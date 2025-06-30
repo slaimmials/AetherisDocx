@@ -2,54 +2,42 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>СSLua API</title>
+  <title>CSLua API</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Prism.js for syntax highlighting -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+  <link rel="icon" href="favicon.svg">
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-lua.min.js"></script>
 </head>
 <body>
-  <header>
-    <span id="title-main">CSLua API - Документация</span>
-    <span class="search-langs-row">
-      <div class="lang-dropdown" id="langDropdown">
-        <button id="langDropdownBtn" class="lang-dropdown-btn" type="button">Русский</button>
-        <div class="lang-dropdown-list" id="langDropdownList">
-          <button type="button" data-lang="ru" class="active">Русский</button>
-          <button type="button" data-lang="en">English</button>
-        </div>
-      </div>
-      <span class="search-box" id="searchbox">
-        <div style="position:relative;display:inline-block;width:auto;">
-          <input type="text" id="searchInput" placeholder="Поиск по API..." autocomplete="off">
-          <div id="searchSuggest" class="search-suggest" style="display:none;position:absolute;top:100%;right:0;"></div>
-        </div>
-      </span>
-    </span>
-  </header>
-  <div class="container">
-    <nav id="nav">
-      <button class="tab-btn active" data-tab="functions"><span class="tr" data-tr="nav-functions">Функции</span></button>
-      <button class="tab-btn" data-tab="classes"><span class="tr" data-tr="nav-classes">Классы</span></button>
-      <button class="tab-btn" data-tab="examples"><span class="tr" data-tr="nav-examples">Примеры</span></button>
+  <div class="vs-toolbar">
+    <svg width="40" height="40" viewBox="0 0 768 576" xmlns="http://www.w3.org/2000/svg" aria-label="Logo" role="img">
+        <circle cx="384" cy="288" r="256" fill="#000080"/>
+        <circle cx="660" cy="108" r="108" fill="#000080"/>
+        <circle cx="520" cy="170" r="94" fill="#fff"/>
+        <circle cx="384" cy="288" r="320" fill="none" stroke="#888" stroke-width="18" stroke-dasharray="36,28"/>
+        <text x="384" y="360" font-family="Arial, Helvetica, sans-serif" font-size="220" fill="#fff" font-weight="bold" text-anchor="middle" dominant-baseline="middle">Lua</text>
+    </svg>
+    <span class="vs-title">CSLua API</span>
+    <input type="text" id="searchInput" placeholder="Поиск по API...">
+    <div class="lang-switcher">
+      <button data-lang="ru" class="lang-btn active">RU</button>
+      <button data-lang="en" class="lang-btn">EN</button>
+    </div>
+  </div>
+  <div class="vs-layout">
+    <nav class="vs-sidebar" id="sidebar">
+      <!-- Боковое меню строит JS -->
     </nav>
-    <main>
-      <section id="tab-functions" class="tab-content" style="display:block;">
-        <h1 class="tr" data-tr="functions-title" style="color:#ffd54f;">Функции</h1>
-        <div id="auto-functions"></div>
-      </section>
-      <section id="tab-classes" class="tab-content" style="display:none;">
-        <h1 class="tr" data-tr="classes-title" style="color:#ffd54f;">Классы и структуры</h1>
-        <div id="auto-classes"></div>
-      </section>
-      <section id="tab-examples" class="tab-content" style="display:none;">
-        <h1 class="tr" data-tr="examples-title" style="color:#ffd54f;">Примеры Lua-кода</h1>
-        <div id="auto-examples"></div>
-      </section>
+    <main class="vs-main" id="mainContent">
+      <div class="welcome">
+        <h1>Добро пожаловать в CSLua API!</h1>
+        <p style="opacity:.8">Слева выберите раздел, чтобы посмотреть документацию к вашему API.</p>
+      </div>
     </main>
   </div>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-lua.min.js"></script>
+  <div id="searchSuggest" class="search-suggest"></div>
   <script src="client.js"></script>
 </body>
 </html>
