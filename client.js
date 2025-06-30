@@ -12,7 +12,7 @@ class ApiDocu {
       Color:   '#f2b134',
       Player:  '#f2b134',
       Ents:    '#f2b134',
-      GameWorld:'#f2b134'
+      game:'#f2b134'
     };
     return `<span style="color:${map[type]||'#fff'}">${type}</span>`;
   }
@@ -299,7 +299,7 @@ const docStructs = [
     ]
   },
   {
-    name: "GameWorld",
+    name: "game",
     noConstructor: true,
     fields: [
       { name: "ents", type: "Ents" }
@@ -455,7 +455,7 @@ const SEARCH_INDEX = [
   {type: 'class', name: {'ru':'Color','en':'Color'}, section: 'classes', anchor: 'Color', label: {'ru':'Класс','en':'Class'}},
   {type: 'class', name: {'ru':'Player','en':'Player'}, section: 'classes', anchor: 'Player', label: {'ru':'Класс','en':'Class'}},
   {type: 'class', name: {'ru':'Ents','en':'Ents'}, section: 'classes', anchor: 'Ents', label: {'ru':'Класс','en':'Class'}},
-  {type: 'class', name: {'ru':'GameWorld','en':'GameWorld'}, section: 'classes', anchor: 'GameWorld', label: {'ru':'Класс','en':'Class'}},
+  {type: 'class', name: {'ru':'game','en':'game'}, section: 'classes', anchor: 'game', label: {'ru':'Класс','en':'Class'}},
   {type: 'example', name: {'ru':'Получить всех игроков','en':'Get all players'}, section: 'examples', anchor: '', label: {'ru':'Пример','en':'Example'}},
   {type: 'example', name: {'ru':'Проверить локального игрока','en':'Check local player'}, section: 'examples', anchor: '', label: {'ru':'Пример','en':'Example'}}
 ];
