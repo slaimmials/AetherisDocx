@@ -161,14 +161,11 @@ const docFunctions = [
       en: "Draws a rectangle at the specified coordinates."
     },
     args: [
-      {name: "x", type:"float", desc: {ru:"X-координата",en:"X coordinate"}},
-      {name: "y", type:"float", desc: {ru:"Y-координата",en:"Y coordinate"}},
-      {name: "w", type:"float", desc: {ru:"Ширина",en:"Width"}},
-      {name: "h", type:"float", desc: {ru:"Высота",en:"Height"}},
-      {name: "color", type:"Color", desc: {ru:"Цвет",en:"Color"}}
+      {name: "from", type:"Vector2", desc: {ru:"Начальные координаты" ,en: "Start coordinate"}},
+      {name: "to", type:"Vector2", desc: {ru:"Конечные координаты",en:"End coordinate"}},
     ],
-    returns: "Rect",
-    example: "draw.rect(10, 20, 100, 50, Color(255, 0, 0, 255))"
+    returns: "class Rect",
+    example: "draw.rect( Vector2(0,0) , Vector2(200,200) )"
   },
   {
     name: "draw.text",
@@ -177,14 +174,47 @@ const docFunctions = [
       en: "Draws text at the specified coordinates."
     },
     args: [
-      {name: "x", type:"float", desc: {ru:"X-координата",en:"X coordinate"}},
-      {name: "y", type:"float", desc: {ru:"Y-координата",en:"Y coordinate"}},
+      {name: "position", Vector2", desc: {ru:"Позиция текста" ,en:"Text position"}},
       {name: "text", type:"string", desc: {ru:"Текст",en:"Text"}},
-      {name: "color", type:"Color", desc: {ru:"Цвет",en:"Color"}}
+      {name: "size", type:"float", desc: {ru:"Размер текста",en:"Text size"}}
     ],
-    returns: "Text",
-    example: 'draw.text(50, 100, "Hello World", Color(255,255,255,255))'
-  }
+    returns: "class Text",
+    example: 'draw.text( Vector2(), "test", 16)'
+  },
+  {
+    name: "view.WorldToScreen",
+    desc: {
+      ru: "Получает координаты объекта на экране.",
+      en: "Gets the coordinates of an object on the screen."
+    },
+    args: [
+      {name: "point", type:"Vector3", desc: {ru:"Координаты в игре",en:"Ingame coordinates"}},
+    ],
+    returns: "Vector2"
+  },
+  {
+    name: "view.CalculateAngles",
+    desc: {
+      ru: "Рассчитывет угол между двумя точками.",
+      en: "Calculates the angle between two points."
+    },
+    args: [
+      {name: "point", type:"Vector3", desc: {ru:"Координаты в игре",en:"Ingame coordinates"}},
+      {name: "point", type:"Vector3", desc: {ru:"Координаты в игре",en:"Ingame coordinates"}},
+    ],
+    returns: "Vector3"
+  },
+  {
+    name: "view.Normalize",
+    desc: {
+      ru: "Нормализует вектор(направление).",
+      en: "Normalizes a vector."
+    },
+    args: [
+      {name: "point", type:"Vector3", desc: {ru:"Направление",en:"Vector"}},
+    ],
+    returns: "Vector3"
+  },
 ];
 
 const docStructs = [
@@ -285,7 +315,7 @@ const docStructs = [
 
 const docExamples = [
   {
-    title: {ru:"Получить всех игроков",en:"Get all players"},
+    title: {ru:"Получить позицию игроков",en:"Get position of all players"},
     code:
 `for _, player in ipairs(world.ents:GetPlayers()) do
     if player:isValid() and player:alive() then
@@ -294,7 +324,7 @@ const docExamples = [
 end`
   },
   {
-    title: {ru:"Проверить локального игрока",en:"Check local player"},
+    title: {ru:"Получить здоровье локального игрока",en:"Check hp of local player"},
     code:
 `localplayer = world.ents:LocalPlayer()
 if localplayer:isValid() then
