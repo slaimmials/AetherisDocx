@@ -215,6 +215,17 @@ const docFunctions = [
     ],
     returns: "Vector3"
   },
+  {
+    name: "view.SetViewAngles",
+    desc: {
+      ru: "Меняет ваше направление взгляда",
+      en: "Edits your view angles"
+    },
+    args: [
+      {name: "vector", type:"Vector3", desc: {ru:"Направление",en:"Angle"}},
+    ],
+    returns: "Vector3"
+  },
 ];
 
 const docStructs = [
