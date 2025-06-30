@@ -174,7 +174,7 @@ const docFunctions = [
       en: "Draws text at the specified coordinates."
     },
     args: [
-      {name: "position", "Vector2", desc: {ru:"Позиция текста" ,en:"Text position"}},
+      {name: "position", type: "Vector2", desc: {ru:"Позиция текста" ,en:"Text position"}},
       {name: "text", type:"string", desc: {ru:"Текст",en:"Text"}},
       {name: "size", type:"float", desc: {ru:"Размер текста",en:"Text size"}}
     ],
