@@ -2,54 +2,633 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>Админка CSLua API</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
+  <title>CSLua Admin — Копировать как JS</title>
   <style>
-    body { background: #212733; color: #fff; font-family: Arial, sans-serif; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; }
-    .tab-btn { background: #31363c; border: none; color: #fff; padding: 8px 18px; cursor: pointer; border-radius: 5px 5px 0 0; }
-    .tab-btn.active { background: #262a33; font-weight: bold; }
+    body { background: #23272e; color: #fff; font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    .container { max-width: 800px; margin: 40px auto; background: #282c34; padding: 32px 28px 48px 28px; border-radius: 12px; box-shadow: 0 2px 18px #0003; }
+    h1 { margin-top: 0; }
+    .tabs { display: flex; gap: 12px; margin-bottom: 20px; }
+    .tab-btn { background: #3a3e47; border: none; color: #fff; padding: 8px 20px; cursor: pointer; border-radius: 6px 6px 0 0; font-size: 1.1em; }
+    .tab-btn.active { background: #212733; font-weight: bold; }
     .section { display: none; }
     .section.active { display: block; }
-    .entity-list { margin-bottom: 20px; }
-    .entity-item { padding: 7px 0; border-bottom: 1px solid #333; }
+    .entity-list { margin-bottom: 18px; }
+    .entity-item { padding: 7px 0; border-bottom: 1px solid #353945; }
     .entity-item:last-child { border-bottom: none; }
-    .btn { background: #39404a; color: #fff; border: none; padding: 5px 13px; border-radius: 4px; cursor: pointer; margin-left: 7px; }
-    .btn-danger { background: #c62828; }
-    .form-group { margin-bottom: 10px; }
+    .btn { background: #495069; color: #fff; border: none; padding: 6px 16px; border-radius: 5px; cursor: pointer; margin-right: 7px; margin-bottom: 4px; }
+    .btn-danger { background: #b9002a; }
+    .form-group { margin-bottom: 12px; }
     label { display: block; margin-bottom: 3px; }
-    input[type="text"], textarea, select { width: 100%; padding: 5px; font-size: 1em; background: #23272e; color: #fff; border: 1px solid #31363c; border-radius: 3px; }
-    textarea { resize: vertical; min-height: 32px; }
-    .fields-block, .args-block, .methods-block { margin-bottom: 14px; }
+    input[type="text"], textarea { width: 100%; padding: 5px; font-size: 1em; background: #292e37; color: #fff; border: 1px solid #3a3e47; border-radius: 3px; }
+    textarea { resize: vertical; min-height: 34px; }
     .inline-group { display: flex; gap: 8px; align-items: center; margin-bottom: 5px; }
-    .small-btn { padding: 2px 7px; font-size: 0.95em; }
-    .section-title { font-size: 1.2em; margin-bottom: 8px; }
-    .success { color: #81c784; margin-bottom: 1em; }
+    .small-btn { padding: 2px 7px; font-size: 0.98em; }
+    .section-title { font-size: 1.2em; margin-bottom: 10px; }
+    .success { color: #8de68d; margin-bottom: 1em; }
+    .copy-bar { position: fixed; left:0; right:0; bottom:0; background: #16181e; padding: 14px 0; text-align: center; box-shadow: 0 -2px 20px #0006;}
+    .copy-bar .btn {font-size: 1.1em; background: #3a3e47;}
+    .copy-bar .btn:active {background: #282c34;}
+    .copy-bar span {color:#7bff99; margin-left:12px;}
+    @media (max-width: 700px) {
+      .container {padding:10px;}
+    }
   </style>
 </head>
 <body>
-  <h1>CSLua API — Админка</h1>
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="functions">Функции</button>
-    <button class="tab-btn" data-tab="structs">Классы</button>
-    <button class="tab-btn" data-tab="examples">Примеры</button>
+  <div class="container">
+    <h1>CSLua API — Админка</h1>
+    <p style="color:#b0b2c0;">Редактируй данные. Когда всё готово — нажми <b>«Скопировать как JS»</b> и вставь в свой <code>apidocu-data.js</code> файл!</p>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="langs">Лейблы</button>
+      <button class="tab-btn" data-tab="functions">Функции</button>
+      <button class="tab-btn" data-tab="structs">Классы</button>
+      <button class="tab-btn" data-tab="examples">Примеры</button>
+      <button class="tab-btn" data-tab="labels">Навигация</button>
+    </div>
+    <div id="langs" class="section active"></div>
+    <div id="functions" class="section"></div>
+    <div id="structs" class="section"></div>
+    <div id="examples" class="section"></div>
+    <div id="labels" class="section"></div>
   </div>
-
-  <div id="functions" class="section active"></div>
-  <div id="structs" class="section"></div>
-  <div id="examples" class="section"></div>
-
+  <div class="copy-bar">
+    <button class="btn" onclick="exportAsJS()">📋 Скопировать как JS</button>
+    <span id="copied-label" style="display:none;">✓ Скопировано!</span>
+  </div>
   <script>
-    let data = {};
-    let editing = null; // {type, index}
+    // ==== Исходные данные ====
+window.ApiDocuLangs = {
+  "ru": {
+    "field": "Поле",
+    "type": "Тип",
+    "desc": "Описание",
+    "constructor": "Конструктор:",
+    "methods": "Методы:",
+    "method": "Метод",
+    "returns": "Возвращает:",
+    "param": "Параметр",
+    "example": "Пример"
+  },
+  "en": {
+    "field": "Field",
+    "type": "Type",
+    "desc": "Description",
+    "constructor": "Constructor:",
+    "methods": "Methods:",
+    "method": "Method",
+    "returns": "Returns:",
+    "param": "Parameter",
+    "example": "Example"
+  }
+};
 
-    // Load data
-    fetch('apidocu-data.json').then(r => r.json()).then(json => {
-      data = json;
-      renderTab('functions');
-      renderTab('structs');
-      renderTab('examples');
-    });
+const docFunctions = [
+  {
+    "name": "draw.rect",
+    "desc": {
+      "ru": "Рисует прямоугольник по координатам.",
+      "en": "Draws a rectangle at the specified coordinates."
+    },
+    "args": [
+      {
+        "name": "from",
+        "type": "Vector2",
+        "desc": {
+          "ru": "Начальные координаты",
+          "en": "Start coordinate"
+        }
+      },
+      {
+        "name": "to",
+        "type": "Vector2",
+        "desc": {
+          "ru": "Конечные координаты",
+          "en": "End coordinate"
+        }
+      }
+    ],
+    "returns": "class Rect",
+    "example": "draw.rect( Vector2(0,0) , Vector2(200,200) )"
+  },
+  {
+    "name": "draw.text",
+    "desc": {
+      "ru": "Рисует текст по координатам.",
+      "en": "Draws text at the specified coordinates."
+    },
+    "args": [
+      {
+        "name": "position",
+        "type": "Vector2",
+        "desc": {
+          "ru": "Позиция текста",
+          "en": "Text position"
+        }
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "desc": {
+          "ru": "Текст",
+          "en": "Text"
+        }
+      },
+      {
+        "name": "size",
+        "type": "float",
+        "desc": {
+          "ru": "Размер текста",
+          "en": "Text size"
+        }
+      }
+    ],
+    "returns": "class Text",
+    "example": "draw.text( Vector2(), \"test\", 16)"
+  },
+  {
+    "name": "view.WorldToScreen",
+    "desc": {
+      "ru": "Получает координаты объекта на экране.",
+      "en": "Gets the coordinates of an object on the screen."
+    },
+    "args": [
+      {
+        "name": "point",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Позиция в игре",
+          "en": "World point"
+        }
+      }
+    ],
+    "returns": "Vector2"
+  },
+  {
+    "name": "view.CalculateAngles",
+    "desc": {
+      "ru": "Рассчитывет угол между двумя точками.",
+      "en": "Calculates the angle between two points."
+    },
+    "args": [
+      {
+        "name": "point",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Точка от",
+          "en": "Point from"
+        }
+      },
+      {
+        "name": "point",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Точка к",
+          "en": "Point to"
+        }
+      }
+    ],
+    "returns": "Vector3"
+  },
+  {
+    "name": "view.Normalize",
+    "desc": {
+      "ru": "Нормализует вектор(направление).",
+      "en": "Normalizes a vector."
+    },
+    "args": [
+      {
+        "name": "point",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Направление",
+          "en": "Vector"
+        }
+      }
+    ],
+    "returns": "Vector3"
+  },
+  {
+    "name": "view.SetViewAngles",
+    "desc": {
+      "ru": "Меняет ваше направление взгляда",
+      "en": "Edits your view angles"
+    },
+    "args": [
+      {
+        "name": "vector",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Направление",
+          "en": "Angle"
+        }
+      }
+    ],
+    "returns": "Vector3"
+  },
+  {
+    "name": "hook.Add",
+    "desc": {
+      "ru": "Регистрация обработчика на событие игры",
+      "en": "Registering a handler for an specific event"
+    },
+    "args": [
+      {
+        "name": "hookName",
+        "type": "string",
+        "desc": {
+          "ru": "Идентификатор события",
+          "en": "Event ID"
+        }
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "desc": {
+          "ru": "Произвольный идентификатор",
+          "en": "Custom ID"
+        }
+      },
+      {
+        "name": "func",
+        "type": "function",
+        "desc": {
+          "ru": "Функция-триггер, вызывается при регистрации события",
+          "en": "Trigger function, called when registering an event"
+        },
+      }
+    ],
+    "returns": "nil",
+    "example": "hook.Add(\"Think\", \"test\", function()\n    print(\"function calling every tick\")\nend)"
+  },
+  {
+    "name": "hook.Remove",
+    "desc": {
+      "ru": "Удаление обработчика на событие игры",
+      "en": "Deleting a handler for a game event"
+    },
+    "args": [
+      {
+        "name": "hookName",
+        "type": "string",
+        "desc": {
+          "ru": "Идентификатор события",
+          "en": "Event ID"
+        }
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "desc": {
+          "ru": "Произвольный идентификатор",
+          "en": "Custom ID"
+        }
+      }
+    ],
+    "returns": "nil",
+    "example": "hook.Remove(\"Think\", \"test\")"
+  }
+];
+
+const docStructs = [
+  {
+    "name": "Vector2",
+    "fields": [
+      {
+        "name": "x",
+        "type": "float",
+        "desc": {
+          "ru": "X-координата",
+          "en": "X coordinate"
+        }
+      },
+      {
+        "name": "y",
+        "type": "float",
+        "desc": {
+          "ru": "Y-координата",
+          "en": "Y coordinate"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Vector3",
+    "fields": [
+      {
+        "name": "x",
+        "type": "float",
+        "desc": {
+          "ru": "X-координата",
+          "en": "X coordinate"
+        }
+      },
+      {
+        "name": "y",
+        "type": "float",
+        "desc": {
+          "ru": "Y-координата",
+          "en": "Y coordinate"
+        }
+      },
+      {
+        "name": "z",
+        "type": "float",
+        "desc": {
+          "ru": "Z-координата",
+          "en": "Z coordinate"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Color",
+    "fields": [
+      {
+        "name": "r",
+        "type": "float",
+        "desc": {
+          "ru": "Красный",
+          "en": "Red"
+        }
+      },
+      {
+        "name": "g",
+        "type": "float",
+        "desc": {
+          "ru": "Зелёный",
+          "en": "Green"
+        }
+      },
+      {
+        "name": "b",
+        "type": "float",
+        "desc": {
+          "ru": "Синий",
+          "en": "Blue"
+        }
+      },
+      {
+        "name": "a",
+        "type": "float",
+        "desc": {
+          "ru": "Прозрачность",
+          "en": "Alpha"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Player",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "alive",
+        "type": "bool",
+        "desc": {
+          "ru": "Жив ли игрок",
+          "en": "Is player alive"
+        }
+      },
+      {
+        "name": "scoped",
+        "type": "bool",
+        "desc": {
+          "ru": "В прицеле ли",
+          "en": "Is scoped"
+        }
+      },
+      {
+        "name": "health",
+        "type": "float",
+        "desc": {
+          "ru": "Текущее здоровье",
+          "en": "Current health"
+        }
+      },
+      {
+        "name": "team",
+        "type": "float",
+        "desc": {
+          "ru": "Номер команды",
+          "en": "Team number"
+        }
+      },
+      {
+        "name": "pos",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Позиция",
+          "en": "Position"
+        }
+      },
+      {
+        "name": "velocity",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Скорость",
+          "en": "Velocity"
+        }
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "desc": {
+          "ru": "Имя игрока",
+          "en": "Player name"
+        }
+      },
+      {
+        "name": "pawnAddr",
+        "type": "uintptr_t",
+        "private": true
+      },
+      {
+        "name": "controllerAddr",
+        "type": "uintptr_t",
+        "private": true
+      }
+    ],
+    "methods": [
+      {
+        "name": "isValid",
+        "args": [],
+        "returns": "bool",
+        "desc": {
+          "ru": "Проверяет валидность игрока",
+          "en": "Checks if player valid"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Rect",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "p1",
+        "type": "Vector2",
+        "desc": "Top-left corner"
+      },
+      {
+        "name": "p2",
+        "type": "Vector2",
+        "desc": "Bottom-right corner"
+      },
+      {
+        "name": "color",
+        "type": "Color",
+        "desc": "Rectangle color"
+      },
+      {
+        "name": "rounding",
+        "type": "float",
+        "desc": "Corner radius"
+      },
+      {
+        "name": "visible",
+        "type": "bool",
+        "desc": "Is rectangle visible",
+        "default": "true"
+      },
+      {
+        "name": "destroyed",
+        "type": "bool",
+        "desc": "Was rectangle destroyed",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "name": "Text",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "pos",
+        "type": "Vector2",
+        "desc": "Text position"
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "desc": "Text string"
+      },
+      {
+        "name": "color",
+        "type": "Color",
+        "desc": "Text color"
+      },
+      {
+        "name": "size",
+        "type": "float",
+        "desc": "Font size"
+      },
+      {
+        "name": "visible",
+        "type": "bool",
+        "desc": "Is text visible",
+        "default": "true"
+      },
+      {
+        "name": "destroyed",
+        "type": "bool",
+        "desc": "Was text destroyed",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "name": "Ents",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "clientBase",
+        "type": "uintptr_t",
+        "private": true
+      }
+    ],
+    "methods": [
+      {
+        "name": "LocalPlayer",
+        "args": [],
+        "returns": "Player",
+        "desc": {
+          "ru": "Локальный игрок",
+          "en": "Local player"
+        }
+      },
+      {
+        "name": "GetPlayers",
+        "args": [],
+        "returns": "table<Player>",
+        "desc": {
+          "ru": "Список игроков",
+          "en": "List of players"
+        }
+      }
+    ]
+  },
+  {
+    "name": "world",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "ents",
+        "type": "Ents"
+      }
+    ],
+    "methods": [
+      {
+        "name": "isLoaded",
+        "private": true,
+        "args": [
+          {
+            "name": "testArg",
+            "type": "bool",
+          }
+        ],
+        "returns": "bool",
+        "desc": {
+          "ru": "Загружен ли мир",
+          "en": "Is world loaded"
+        }
+      }
+    ]
+  }
+];
+
+const docExamples = [
+  {
+    "title": {
+      "ru": "Получить позицию игроков",
+      "en": "Get position of all players"
+    },
+    "code": "for _, player in ipairs(world.ents:GetPlayers()) do\n    if player:isValid() and player:alive() then\n        print(player:pos().x, player:pos().y, player:pos().z)\n    end\nend"
+  },
+  {
+    "title": {
+      "ru": "Получить здоровье локального игрока",
+      "en": "Check hp of local player"
+    },
+    "code": "localplayer = world.ents:LocalPlayer()\nif localplayer:isValid() then\n    print(\"HP:\", localplayer:health())\nend"
+  }
+];
+
+const LANGS = {
+  "ru": {
+    "title-main": "CSLua API — Документация",
+    "nav-functions": "Функции",
+    "nav-classes": "Классы",
+    "nav-examples": "Примеры"
+  },
+  "en": {
+    "title-main": "CSLua API — Documentation",
+    "nav-functions": "Functions",
+    "nav-classes": "Classes",
+    "nav-examples": "Examples"
+  }
+};
+
+    // ================== РЕНДЕРИНГ =====================
 
     // Tabs logic
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -58,21 +637,47 @@
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById(btn.dataset.tab).classList.add('active');
-      }
+        renderTab(btn.dataset.tab);
+      };
     });
 
     function renderTab(tab) {
-      if(tab === 'functions') renderFunctions();
-      if(tab === 'structs') renderStructs();
-      if(tab === 'examples') renderExamples();
+      if (tab === 'langs') renderLangs();
+      if (tab === 'functions') renderFunctions();
+      if (tab === 'structs') renderStructs();
+      if (tab === 'examples') renderExamples();
+      if (tab === 'labels') renderLabels();
     }
-
-    // FUNCTIONS
+    function renderLangs() {
+      const cont = document.getElementById('langs');
+      cont.innerHTML = `<div class="section-title">Лейблы для описания</div>
+      <div>
+        <form id="langs-form">
+          ${['ru', 'en'].map(lang => `
+            <fieldset style="margin-bottom:12px;border:1px solid #353945;border-radius:6px;padding:10px;">
+              <legend>${lang === 'ru' ? 'Русский' : 'English'}</legend>
+              ${Object.keys(ApiDocuLangs[lang]).map(key => `
+                <div class="form-group">
+                  <label>${key}:</label>
+                  <input type="text" name="${lang}-${key}" value="${ApiDocuLangs[lang][key]}">
+                </div>
+              `).join('')}
+            </fieldset>
+          `).join('')}
+        </form>
+      </div>`;
+      document.querySelectorAll('#langs-form input').forEach(el => {
+        el.oninput = function() {
+          const [lang, key] = el.name.split('-');
+          ApiDocuLangs[lang][key] = el.value;
+        };
+      });
+    }
     function renderFunctions() {
       const cont = document.getElementById('functions');
       cont.innerHTML = `<div class="section-title">Функции</div>
         <div class="entity-list">
-          ${data.docFunctions.map((f,i) => `
+          ${docFunctions.map((f, i) => `
             <div class="entity-item">
               <b>${f.name}</b>
               <button class="btn small-btn" onclick="editFunction(${i})">✎</button>
@@ -83,76 +688,95 @@
         <button class="btn" onclick="addFunction()">Добавить функцию</button>
         <div id="function-form-block"></div>`;
     }
+    function renderStructs() {
+      const cont = document.getElementById('structs');
+      cont.innerHTML = `<div class="section-title">Классы/Структуры</div>
+        <div class="entity-list">
+          ${docStructs.map((s, i) => `
+            <div class="entity-item">
+              <b>${s.name}</b>
+              <button class="btn small-btn" onclick="editStruct(${i})">✎</button>
+              <button class="btn btn-danger small-btn" onclick="deleteStruct(${i})">⨉</button>
+            </div>
+          `).join('')}
+        </div>
+        <button class="btn" onclick="addStruct()">Добавить класс/структуру</button>
+        <div id="struct-form-block"></div>`;
+    }
     window.renderFunctions = renderFunctions;
-
     function editFunction(idx) {
-      editing = {type:'function', index: idx};
-      showFunctionForm(data.docFunctions[idx], idx);
+      showFunctionForm(JSON.parse(JSON.stringify(docFunctions[idx])), idx);
     }
     function addFunction() {
-      editing = {type:'function', index: null};
-      showFunctionForm({name:'', desc:{ru:'',en:''}, args:[], returns:'', example:''});
+      showFunctionForm({ name: '', desc: { ru: '', en: '' }, args: [], returns: '', example: '' }, null);
     }
     function deleteFunction(idx) {
-      if(confirm('Удалить функцию?')) {
-        data.docFunctions.splice(idx,1);
+      if (confirm('Удалить функцию?')) {
+        docFunctions.splice(idx, 1);
         renderFunctions();
       }
     }
+    window.cancelEdit = function(type) {
+      if (type === 'function') {
+        document.getElementById('function-form-block').innerHTML = '';
+      } else if (type === 'struct') {
+        document.getElementById('struct-form-block').innerHTML = '';
+      } else if (type === 'example') {
+        document.getElementById('example-form-block').innerHTML = '';
+      }
+    };
     window.editFunction = editFunction;
     window.addFunction = addFunction;
     window.deleteFunction = deleteFunction;
-
     function showFunctionForm(f, idx) {
       const block = document.getElementById('function-form-block');
       block.innerHTML = `
         <form onsubmit="return saveFunction(event, ${idx})">
-          <div class="form-group">
-            <label>Имя:</label>
-            <input type="text" required name="name" value="${f.name||''}">
+          <div class="form-group"><label>Имя:</label>
+            <input type="text" required name="name" value="${f.name || ''}">
           </div>
-          <div class="form-group">
-            <label>Описание (ru):</label>
-            <input type="text" name="desc-ru" value="${(f.desc&&f.desc.ru)||''}">
+          <div class="form-group"><label>Описание (ru):</label>
+            <input type="text" name="desc-ru" value="${(f.desc && f.desc.ru) || ''}">
           </div>
-          <div class="form-group">
-            <label>Описание (en):</label>
-            <input type="text" name="desc-en" value="${(f.desc&&f.desc.en)||''}">
+          <div class="form-group"><label>Описание (en):</label>
+            <input type="text" name="desc-en" value="${(f.desc && f.desc.en) || ''}">
           </div>
-          <div class="form-group">
-            <label>Возвращает:</label>
-            <input type="text" name="returns" value="${f.returns||''}">
+          <div class="form-group"><label>Возвращает:</label>
+            <input type="text" name="returns" value="${f.returns || ''}">
           </div>
-          <div class="form-group">
-            <label>Пример:</label>
-            <textarea name="example">${f.example||''}</textarea>
+          <div class="form-group"><label>Пример:</label>
+            <textarea name="example">${f.example || ''}</textarea>
           </div>
           <div class="form-group args-block">
             <label>Аргументы:</label>
             <div id="args">
-              ${(f.args||[]).map((a,j) => `
+              ${(f.args || []).map((a, j) => `
                 <div class="inline-group">
-                  <input type="text" placeholder="имя" value="${a.name||''}" data-arg="name" data-idx="${j}">
-                  <input type="text" placeholder="тип" value="${a.type||''}" data-arg="type" data-idx="${j}">
-                  <input type="text" placeholder="описание (ru)" value="${(a.desc&&a.desc.ru)||''}" data-arg="desc-ru" data-idx="${j}">
-                  <input type="text" placeholder="описание (en)" value="${(a.desc&&a.desc.en)||''}" data-arg="desc-en" data-idx="${j}">
-                  <button type="button" class="btn btn-danger small-btn" onclick="removeArg(${j})">⨉</button>
+                  <input type="text" placeholder="имя" value="${a.name || ''}" data-arg="name" data-idx="${j}">
+                  <input type="text" placeholder="тип" value="${a.type || ''}" data-arg="type" data-idx="${j}">
+                  <input type="text" placeholder="описание (ru)" value="${(a.desc && a.desc.ru) || ''}" data-arg="desc-ru" data-idx="${j}">
+                  <input type="text" placeholder="описание (en)" value="${(a.desc && a.desc.en) || ''}" data-arg="desc-en" data-idx="${j}">
+                  <button type="button" class="btn btn-danger small-btn" onclick="removeArg(${j}, ${idx})">⨉</button>
                 </div>
               `).join('')}
             </div>
-            <button type="button" class="btn small-btn" onclick="addArg()">Добавить аргумент</button>
+            <button type="button" class="btn small-btn" onclick="addArg(${idx})">Добавить аргумент</button>
           </div>
           <button class="btn" type="submit">Сохранить</button>
-          <button class="btn btn-danger" type="button" onclick="cancelEdit()">Отмена</button>
+          <button class="btn btn-danger" type="button" onclick="cancelEdit('function')">Отмена</button>
         </form>
       `;
-      window.removeArg = function(j) {
-        f.args.splice(j,1); showFunctionForm(f, idx);
+      // Аргументы
+      window.removeArg = function(j, i) {
+        if(idx==null) f.args.splice(j, 1);
+        else docFunctions[idx].args.splice(j, 1);
+        showFunctionForm(idx==null?f:docFunctions[idx], idx);
       };
-      window.addArg = function() {
-        (f.args||(f.args=[])).push({name:'', type:'', desc:{ru:'',en:''}}); showFunctionForm(f, idx);
+      window.addArg = function(i) {
+        if(idx==null) (f.args||(f.args=[])).push({ name:'', type:'', desc:{ru:'',en:''} });
+        else (docFunctions[idx].args||(docFunctions[idx].args=[])).push({ name:'', type:'', desc:{ru:'',en:''} });
+        showFunctionForm(idx==null?f:docFunctions[idx], idx);
       };
-      // live update on input
       block.querySelectorAll('input,textarea').forEach(el => {
         el.oninput = function() {
           if(el.name === 'name') f.name = el.value;
@@ -168,69 +792,65 @@
             if(el.dataset.arg === 'desc-ru') (arg.desc||(arg.desc={})).ru = el.value;
             if(el.dataset.arg === 'desc-en') (arg.desc||(arg.desc={})).en = el.value;
           }
-        }
+        };
       });
     }
     window.saveFunction = function(ev, idx) {
       ev.preventDefault();
-      if(editing.index == null) data.docFunctions.push(editing.temp || data.docFunctions[data.docFunctions.length-1]);
+
+      // Собираем данные из формы
+      const form = ev.target;
+      const f = {
+        name: form.name.value,
+        desc: { ru: form['desc-ru'].value, en: form['desc-en'].value },
+        args: [],
+        returns: form.returns.value,
+        example: form.example.value,
+      };
+
+      // Собрать аргументы
+      const argsBlock = form.querySelectorAll('.args-block .inline-group');
+      argsBlock.forEach(group => {
+        const inputs = group.querySelectorAll('input');
+        f.args.push({
+          name: inputs[0].value,
+          type: inputs[1].value,
+          desc: { ru: inputs[2].value, en: inputs[3].value }
+        });
+      });
+
+      if (idx == null) docFunctions.push(f);
+      else docFunctions[idx] = f;
+
       renderFunctions();
       document.getElementById('function-form-block').innerHTML = '<div class="success">Сохранено!</div>';
       setTimeout(()=>document.getElementById('function-form-block').innerHTML='', 800);
-      editing = null;
       return false;
-    }
-    window.cancelEdit = function() {
-      document.getElementById('function-form-block').innerHTML = '';
-      editing = null;
-    }
+    };
 
-    // STRUCTS
-    function renderStructs() {
-      const cont = document.getElementById('structs');
-      cont.innerHTML = `<div class="section-title">Классы/Структуры</div>
-        <div class="entity-list">
-          ${data.docStructs.map((s,i) => `
-            <div class="entity-item">
-              <b>${s.name}</b>
-              <button class="btn small-btn" onclick="editStruct(${i})">✎</button>
-              <button class="btn btn-danger small-btn" onclick="deleteStruct(${i})">⨉</button>
-            </div>
-          `).join('')}
-        </div>
-        <button class="btn" onclick="addStruct()">Добавить класс/структуру</button>
-        <div id="struct-form-block"></div>`;
-    }
     window.renderStructs = renderStructs;
 
     function editStruct(idx) {
-      editing = {type:'struct', index: idx};
-      showStructForm(data.docStructs[idx], idx);
+      showStructForm(JSON.parse(JSON.stringify(docStructs[idx])), idx);
     }
-    function addStruct() {
-      editing = {type:'struct', index: null};
-      showStructForm({name:'', fields:[], methods:[]});
-    }
+    function addStruct() { showStructForm({ name:'', fields:[], methods:[] }, null); }
     function deleteStruct(idx) {
       if(confirm('Удалить класс?')) {
-        data.docStructs.splice(idx,1);
+        docStructs.splice(idx, 1);
         renderStructs();
       }
     }
     window.editStruct = editStruct;
     window.addStruct = addStruct;
     window.deleteStruct = deleteStruct;
-
     function showStructForm(s, idx) {
       const block = document.getElementById('struct-form-block');
       block.innerHTML = `
-        <form onsubmit="return saveStruct(event, ${idx})">
-          <div class="form-group">
-            <label>Имя:</label>
+        <form onsubmit="return saveStruct(event,${idx})">
+          <div class="form-group"><label>Имя:</label>
             <input type="text" required name="name" value="${s.name||''}">
           </div>
-          <div class="form-group">
-            <label><input type="checkbox" name="noConstructor" ${s.noConstructor?'checked':''}> Без конструктора</label>
+          <div class="form-group"><label><input type="checkbox" name="noConstructor" ${s.noConstructor?'checked':''}> Без конструктора</label>
           </div>
           <div class="form-group fields-block">
             <label>Поля:</label>
@@ -242,11 +862,11 @@
                   <input type="text" placeholder="описание (ru)" value="${(f.desc&&f.desc.ru)||''}" data-field="desc-ru" data-idx="${j}">
                   <input type="text" placeholder="описание (en)" value="${(f.desc&&f.desc.en)||''}" data-field="desc-en" data-idx="${j}">
                   <label><input type="checkbox" ${f.private?'checked':''} data-field="private" data-idx="${j}"> private</label>
-                  <button type="button" class="btn btn-danger small-btn" onclick="removeField(${j})">⨉</button>
+                  <button type="button" class="btn btn-danger small-btn" onclick="removeField(${j},${idx})">⨉</button>
                 </div>
               `).join('')}
             </div>
-            <button type="button" class="btn small-btn" onclick="addField()">Добавить поле</button>
+            <button type="button" class="btn small-btn" onclick="addField(${idx})">Добавить поле</button>
           </div>
           <div class="form-group methods-block">
             <label>Методы:</label>
@@ -259,29 +879,36 @@
                   <input type="text" placeholder="описание (ru)" value="${(m.desc&&m.desc.ru)||''}" data-method="desc-ru" data-idx="${j}">
                   <input type="text" placeholder="описание (en)" value="${(m.desc&&m.desc.en)||''}" data-method="desc-en" data-idx="${j}">
                   <label><input type="checkbox" ${m.private?'checked':''} data-method="private" data-idx="${j}"> private</label>
-                  <button type="button" class="btn btn-danger small-btn" onclick="removeMethod(${j})">⨉</button>
+                  <button type="button" class="btn btn-danger small-btn" onclick="removeMethod(${j},${idx})">⨉</button>
                 </div>
               `).join('')}
             </div>
-            <button type="button" class="btn small-btn" onclick="addMethod()">Добавить метод</button>
+            <button type="button" class="btn small-btn" onclick="addMethod(${idx})">Добавить метод</button>
           </div>
           <button class="btn" type="submit">Сохранить</button>
-          <button class="btn btn-danger" type="button" onclick="cancelEdit()">Отмена</button>
+          <button class="btn btn-danger" type="button" onclick="cancelEdit('struct')">Отмена</button>
         </form>
       `;
-      window.removeField = function(j) {
-        s.fields.splice(j,1); showStructForm(s, idx);
+      window.removeField = function(j, i) {
+        if(idx==null) s.fields.splice(j,1);
+        else docStructs[idx].fields.splice(j,1);
+        showStructForm(idx==null?s:docStructs[idx], idx);
       };
-      window.addField = function() {
-        (s.fields||(s.fields=[])).push({name:'', type:'', desc:{ru:'',en:''}}); showStructForm(s, idx);
+      window.addField = function(i) {
+        if(idx==null) (s.fields||(s.fields=[])).push({ name:'', type:'', desc:{ru:'',en:''} });
+        else (docStructs[idx].fields||(docStructs[idx].fields=[])).push({ name:'', type:'', desc:{ru:'',en:''} });
+        showStructForm(idx==null?s:docStructs[idx], idx);
       };
-      window.removeMethod = function(j) {
-        s.methods.splice(j,1); showStructForm(s, idx);
+      window.removeMethod = function(j, i) {
+        if(idx==null) s.methods.splice(j,1);
+        else docStructs[idx].methods.splice(j,1);
+        showStructForm(idx==null?s:docStructs[idx], idx);
       };
-      window.addMethod = function() {
-        (s.methods||(s.methods=[])).push({name:'', args:[], returns:'', desc:{ru:'',en:''}}); showStructForm(s, idx);
+      window.addMethod = function(i) {
+        if(idx==null) (s.methods||(s.methods=[])).push({ name:'', args:[], returns:'', desc:{ru:'',en:''} });
+        else (docStructs[idx].methods||(docStructs[idx].methods=[])).push({ name:'', args:[], returns:'', desc:{ru:'',en:''} });
+        showStructForm(idx==null?s:docStructs[idx], idx);
       };
-      // live update fields
       block.querySelectorAll('input').forEach(el => {
         el.oninput = function() {
           if(el.name==='name') s.name = el.value;
@@ -303,25 +930,67 @@
             if(el.dataset.method==='desc-en') (m.desc||(m.desc={})).en = el.value;
             if(el.dataset.method==='private') m.private = el.checked;
           }
-        }
+        };
       });
     }
     window.saveStruct = function(ev, idx) {
       ev.preventDefault();
-      if(editing.index == null) data.docStructs.push(editing.temp || data.docStructs[data.docStructs.length-1]);
+
+      const form = ev.target;
+      const s = {
+        name: form.name.value,
+        noConstructor: form.noConstructor ? form.noConstructor.checked : false,
+        fields: [],
+        methods: []
+      };
+
+      // Собираем поля
+      const fieldGroups = form.querySelectorAll('.fields-block .inline-group');
+      fieldGroups.forEach(group => {
+        const inputs = group.querySelectorAll('input');
+        const f = {
+          name: inputs[0].value,
+          type: inputs[1].value,
+          desc: { ru: inputs[2].value, en: inputs[3].value },
+          private: inputs[4].checked
+        };
+        s.fields.push(f);
+      });
+
+      // Собираем методы
+      const methodGroups = form.querySelectorAll('.methods-block .inline-group');
+      methodGroups.forEach(group => {
+        const inputs = group.querySelectorAll('input');
+        const m = {
+          name: inputs[0].value,
+          args: inputs[1].value
+            .split(',')
+            .map(x => x.trim())
+            .filter(x => x)
+            .map(x => ({ name: x })),
+          returns: inputs[2].value,
+          desc: { ru: inputs[3].value, en: inputs[4].value },
+          private: inputs[5].checked
+        };
+        s.methods.push(m);
+      });
+
+      if (idx == null) docStructs.push(s);
+      else docStructs[idx] = s;
+
       renderStructs();
       document.getElementById('struct-form-block').innerHTML = '<div class="success">Сохранено!</div>';
-      setTimeout(()=>document.getElementById('struct-form-block').innerHTML='', 800);
-      editing = null;
+      setTimeout(() => {
+        document.getElementById('struct-form-block').innerHTML = '';
+      }, 800);
       return false;
-    }
+    };
 
-    // EXAMPLES
     function renderExamples() {
       const cont = document.getElementById('examples');
       cont.innerHTML = `<div class="section-title">Примеры</div>
         <div class="entity-list">
-          ${data.docExamples.map((e,i) => `
+          ${docExamples.map((e, i) => `
             <div class="entity-item">
               <b>${e.title.ru||e.title.en}</b>
               <button class="btn small-btn" onclick="editExample(${i})">✎</button>
@@ -333,75 +1002,108 @@
         <div id="example-form-block"></div>`;
     }
     window.renderExamples = renderExamples;
-
     function editExample(idx) {
-      editing = {type:'example', index: idx};
-      showExampleForm(data.docExamples[idx], idx);
+      showExampleForm(JSON.parse(JSON.stringify(docExamples[idx])), idx);
     }
-    function addExample() {
-      editing = {type:'example', index: null};
-      showExampleForm({title:{ru:'',en:''}, code:''});
-    }
+    function addExample() { showExampleForm({ title:{ru:'',en:''}, code:'' }, null); }
     function deleteExample(idx) {
       if(confirm('Удалить пример?')) {
-        data.docExamples.splice(idx,1);
+        docExamples.splice(idx, 1);
         renderExamples();
       }
     }
     window.editExample = editExample;
     window.addExample = addExample;
     window.deleteExample = deleteExample;
-
     function showExampleForm(e, idx) {
       const block = document.getElementById('example-form-block');
       block.innerHTML = `
-        <form onsubmit="return saveExample(event, ${idx})">
-          <div class="form-group">
-            <label>Заголовок (ru):</label>
+        <form onsubmit="return saveExample(event,${idx})">
+          <div class="form-group"><label>Заголовок (ru):</label>
             <input type="text" name="title-ru" value="${(e.title&&e.title.ru)||''}">
           </div>
-          <div class="form-group">
-            <label>Заголовок (en):</label>
+          <div class="form-group"><label>Заголовок (en):</label>
             <input type="text" name="title-en" value="${(e.title&&e.title.en)||''}">
           </div>
-          <div class="form-group">
-            <label>Код:</label>
+          <div class="form-group"><label>Код:</label>
             <textarea name="code">${e.code||''}</textarea>
           </div>
           <button class="btn" type="submit">Сохранить</button>
-          <button class="btn btn-danger" type="button" onclick="cancelEdit()">Отмена</button>
-        </form>
-      `;
+          <button class="btn btn-danger" type="button" onclick="cancelEdit('example')">Отмена</button>
+        </form>`;
       block.querySelectorAll('input,textarea').forEach(el => {
         el.oninput = function() {
           if(el.name==='title-ru') (e.title||(e.title={})).ru = el.value;
           if(el.name==='title-en') (e.title||(e.title={})).en = el.value;
           if(el.name==='code') e.code = el.value;
-        }
+        };
       });
     }
     window.saveExample = function(ev, idx) {
       ev.preventDefault();
-      if(editing.index == null) data.docExamples.push(editing.temp || data.docExamples[data.docExamples.length-1]);
+      const form = ev.target;
+      const e = {
+        title: { ru: form['title-ru'].value, en: form['title-en'].value },
+        code: form.code.value
+      };
+
+      if (idx == null) docExamples.push(e);
+      else docExamples[idx] = e;
+
       renderExamples();
       document.getElementById('example-form-block').innerHTML = '<div class="success">Сохранено!</div>';
       setTimeout(()=>document.getElementById('example-form-block').innerHTML='', 800);
-      editing = null;
       return false;
+    };
+
+    function renderLabels() {
+      const cont = document.getElementById('labels');
+      cont.innerHTML = `<div class="section-title">Навигация и лейблы</div>
+        <form id="labels-form">
+          ${['ru', 'en'].map(lang => `
+            <fieldset style="margin-bottom:12px;border:1px solid #353945;border-radius:6px;padding:10px;">
+              <legend>${lang === 'ru' ? 'Русский' : 'English'}</legend>
+              ${Object.keys(LANGS[lang]).map(key => `
+                <div class="form-group">
+                  <label>${key}:</label>
+                  <input type="text" name="${lang}-${key}" value="${LANGS[lang][key]}">
+                </div>
+              `).join('')}
+            </fieldset>
+          `).join('')}
+        </form>`;
+      document.querySelectorAll('#labels-form input').forEach(el => {
+        el.oninput = function() {
+          const [lang, key] = el.name.split('-');
+          LANGS[lang][key] = el.value;
+        };
+      });
     }
 
-    // Экспорт JSON (для выгрузки!)
-    // Можно повесить кнопку в интерфейс и сохранить как файл через Blob.
-    window.exportJSON = function() {
-      const blob = new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'apidocu-data.json';
-      a.click();
-      URL.revokeObjectURL(url);
+    // Первый рендер
+    renderLangs();
+
+    // ================== COPY AS JS =====================
+    function jsStringifyObj(name, val) {
+      // Для window.переменных — window.X = ...
+      return /^window\./.test(name)
+        ? name + " = " + JSON.stringify(val, null, 2) + ";"
+        : "const " + name + " = " + JSON.stringify(val, null, 2) + ";";
     }
+    function exportAsJS() {
+      // Собираем JS для копирования
+      let js =
+`window.ApiDocuLangs = ${JSON.stringify(ApiDocuLangs, null, 2)};\n
+const docFunctions = ${JSON.stringify(docFunctions, null, 2)};\n
+const docStructs = ${JSON.stringify(docStructs, null, 2)};\n
+const docExamples = ${JSON.stringify(docExamples, null, 2)};\n
+const LANGS = ${JSON.stringify(LANGS, null, 2)};\n`;
+      navigator.clipboard.writeText(js).then(() => {
+        document.getElementById('copied-label').style.display = '';
+        setTimeout(()=>document.getElementById('copied-label').style.display='none', 1200);
+      });
+    }
+    window.exportAsJS = exportAsJS;
   </script>
-  <button onclick="exportJSON()" style="position:fixed;right:24px;top:20px;" class="btn">💾 Экспорт JSON</button>
 </body>
 </html>

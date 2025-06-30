@@ -22,12 +22,13 @@ class ApiDocu {
       int:     '#ba68c8',
       string:  '#81c784',
       bool:    '#ffd54f',
-      'uint8_t':'#ba68c8',
-      Vector2: '#f2b134',
-      Vector3: '#f2b134',
-      Color:   '#f2b134',
-      Player:  '#f2b134',
-      Ents:    '#f2b134',
+      function:'#f2b134',
+      uint8_t: '#ba68c8',
+      Vector2: '#4bc9a2',
+      Vector3: '#4bc9a2',
+      Color:   '#4bc9a2',
+      Player:  '#4bc9a2',
+      Ents:    '#4bc9a2',
       world:'#f2b134'
     };
     return `<span style="color:${map[type]||'#fff'}">${type}</span>`;
@@ -64,6 +65,7 @@ class ApiDocu {
   }
   static renderMethodRow(method, hasDesc) {
     const argNames = (method.args || []).map(a => a.name).join(', ');
+    const signature = argNames ? `${method.name}(${argNames})` : method.name;
     let argsBlock = '';
     if (method.args && method.args.length) {
       argsBlock = `<div style="margin-left:1.7em;font-size:0.97em;margin-top:2px;">
@@ -78,11 +80,11 @@ class ApiDocu {
         ${
           method.private
             ? `<span class="private-fade" style="margin-left:5px;">
-                <span style="color:#f2b134;">${method.name}(${argNames})</span>
+                <span style="color:#f2b134;">${signature}</span>
                 <span style="background:#c62828;color:#fff;border-radius:3px;padding:0 7px;font-size:0.97em;margin-left:7px;">private</span>
                 ${argsBlock}
               </span>`
-            : `<span style="color:#f2b134;margin-left:5px;">${method.name}(${argNames})</span>${argsBlock}`
+            : `<span style="color:#f2b134;margin-left:5px;">${signature}</span>${argsBlock}`
         }
       </td>
       <td data-td="returns" style="vertical-align:top;">
@@ -139,11 +141,33 @@ class ApiDocu {
           <th data-th="type" style="color:#ba68c8;">${ApiDocu._th('type')}</th>
           <th data-th="desc" style="color:#81c784;">${ApiDocu._th('desc')}</th>
         </tr>
-        ${(f.args||[]).map(a=>`<tr>
-          <td data-td="field">${a.private ? icons.fieldPrivate : icons.field}<span style="color:#64b5f6;margin-left:5px;">${a.name}</span></td>
-          <td data-td="type">${this.colorizeType(a.type)}</td>
-          <td data-td="desc">${tr(a.desc) ? `<span style="color:#81c784;">${tr(a.desc)}</span>` : ''}</td>
-        </tr>`).join('')}
+        ${(f.args||[]).map(a=> {
+          let argsSignature = '';
+          let argsBlock = '';
+          if (a.type === 'function') {
+            if (Array.isArray(a.args) && a.args.length) {
+              argsSignature = `(${a.args.map(arg => arg.name).join(', ')})`;
+              argsBlock = `<div style="margin-left:1.7em;font-size:0.97em;margin-top:2px;">
+                ${a.args.map(
+                  arg => `<div><b style="color:#ffd54f">${arg.name}:</b> <span style="color:#ba68c8;">${arg.type}</span>${tr(arg.desc) ? ` — <span style="color:#aaa;">${tr(arg.desc)}</span>` : ''}</div>`
+                ).join('')}
+              </div>`;
+            } else {
+              argsSignature = '';
+            }
+          }
+          return `<tr>
+            <td data-td="field">
+              ${a.private ? icons.fieldPrivate : (a.type === 'function' ? icons.method : icons.field)}
+              <span style="color:${a.type === 'function' ? '#f2b134' : '#64b5f6'};margin-left:5px;">
+                ${a.name || ''}${a.type === 'function' ? argsSignature : ''}
+              </span>
+              ${argsBlock}
+            </td>
+            <td data-td="type" style="vertical-align:top;">${this.colorizeType(a.type)}</td>
+            <td data-td="desc" style="vertical-align:top;">${tr(a.desc) ? `<span style="color:#81c784;">${tr(a.desc)}</span>` : ''}</td>
+          </tr>`;
+        }).join('')}
       </table>
       <b style="color:#ffd54f;">${ApiDocu._th('returns')}</b> <code class="inline">${f.returns||'nil'}</code>
       ${f.example ? `<h4 style="color:#90caf9;">${ApiDocu._th('example')}</h4>
@@ -177,234 +201,576 @@ window.ApiDocu = ApiDocu;
 
 // ==== YOUR DATA (multi-lang ready, ru/en) ====
 window.ApiDocuLangs = {
-  ru: {
-    field: "Поле",
-    type: "Тип",
-    desc: "Описание",
-    constructor: "Конструктор:",
-    methods: "Методы:",
-    method: "Метод",
-    returns: "Возвращает:",
-    param: "Параметр",
-    example: "Пример"
+  "ru": {
+    "field": "Поле",
+    "type": "Тип",
+    "desc": "Описание",
+    "constructor": "Конструктор:",
+    "methods": "Методы:",
+    "method": "Метод",
+    "returns": "Возвращает:",
+    "param": "Параметр",
+    "example": "Пример"
   },
-  en: {
-    field: "Field",
-    type: "Type",
-    desc: "Description",
-    constructor: "Constructor:",
-    methods: "Methods:",
-    method: "Method",
-    returns: "Returns:",
-    param: "Parameter",
-    example: "Example"
+  "en": {
+    "field": "Field",
+    "type": "Type",
+    "desc": "Description",
+    "constructor": "Constructor:",
+    "methods": "Methods:",
+    "method": "Method",
+    "returns": "Returns:",
+    "param": "Parameter",
+    "example": "Example"
   }
 };
 
 const docFunctions = [
   {
-    name: "draw.rect",
-    desc: {
-      ru: "Рисует прямоугольник по координатам.",
-      en: "Draws a rectangle at the specified coordinates."
+    "name": "draw.rect",
+    "desc": {
+      "ru": "Рисует прямоугольник по координатам.",
+      "en": "Draws a rectangle at the specified coordinates."
     },
-    args: [
-      {name: "from", type:"Vector2", desc: {ru:"Начальные координаты" ,en: "Start coordinate"}},
-      {name: "to", type:"Vector2", desc: {ru:"Конечные координаты",en:"End coordinate"}},
+    "args": [
+      {
+        "name": "from",
+        "type": "Vector2",
+        "desc": {
+          "ru": "Начальные координаты",
+          "en": "Start coordinate"
+        }
+      },
+      {
+        "name": "to",
+        "type": "Vector2",
+        "desc": {
+          "ru": "Конечные координаты",
+          "en": "End coordinate"
+        }
+      }
     ],
-    returns: "class Rect",
-    example: "draw.rect( Vector2(0,0) , Vector2(200,200) )"
+    "returns": "class Rect",
+    "example": "draw.rect( Vector2(0,0) , Vector2(200,200) )"
   },
   {
-    name: "draw.text",
-    desc: {
-      ru: "Рисует текст по координатам.",
-      en: "Draws text at the specified coordinates."
+    "name": "draw.text",
+    "desc": {
+      "ru": "Рисует текст по координатам.",
+      "en": "Draws text at the specified coordinates."
     },
-    args: [
-      {name: "position", type: "Vector2", desc: {ru:"Позиция текста" ,en:"Text position"}},
-      {name: "text", type:"string", desc: {ru:"Текст",en:"Text"}},
-      {name: "size", type:"float", desc: {ru:"Размер текста",en:"Text size"}}
+    "args": [
+      {
+        "name": "position",
+        "type": "Vector2",
+        "desc": {
+          "ru": "Позиция текста",
+          "en": "Text position"
+        }
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "desc": {
+          "ru": "Текст",
+          "en": "Text"
+        }
+      },
+      {
+        "name": "size",
+        "type": "float",
+        "desc": {
+          "ru": "Размер текста",
+          "en": "Text size"
+        }
+      }
     ],
-    returns: "class Text",
-    example: 'draw.text( Vector2(), "test", 16)'
+    "returns": "class Text",
+    "example": "draw.text( Vector2(), \"test\", 16)"
   },
   {
-    name: "view.WorldToScreen",
-    desc: {
-      ru: "Получает координаты объекта на экране.",
-      en: "Gets the coordinates of an object on the screen."
+    "name": "view.WorldToScreen",
+    "desc": {
+      "ru": "Получает координаты объекта на экране.",
+      "en": "Gets the coordinates of an object on the screen."
     },
-    args: [
-      {name: "point", type:"Vector3", desc: {ru:"Позиция в игре",en:"World point"}},
+    "args": [
+      {
+        "name": "point",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Позиция в игре",
+          "en": "World point"
+        }
+      }
     ],
-    returns: "Vector2"
+    "returns": "Vector2"
   },
   {
-    name: "view.CalculateAngles",
-    desc: {
-      ru: "Рассчитывет угол между двумя точками.",
-      en: "Calculates the angle between two points."
+    "name": "view.CalculateAngles",
+    "desc": {
+      "ru": "Рассчитывет угол между двумя точками.",
+      "en": "Calculates the angle between two points."
     },
-    args: [
-      {name: "point", type:"Vector3", desc: {ru:"Точка от",en:"Point from"}},
-      {name: "point", type:"Vector3", desc: {ru:"Точка к",en:"Point to"}},
+    "args": [
+      {
+        "name": "point",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Точка от",
+          "en": "Point from"
+        }
+      },
+      {
+        "name": "point",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Точка к",
+          "en": "Point to"
+        }
+      }
     ],
-    returns: "Vector3"
+    "returns": "Vector3"
   },
   {
-    name: "view.Normalize",
-    desc: {
-      ru: "Нормализует вектор(направление).",
-      en: "Normalizes a vector."
+    "name": "view.Normalize",
+    "desc": {
+      "ru": "Нормализует вектор(направление).",
+      "en": "Normalizes a vector."
     },
-    args: [
-      {name: "point", type:"Vector3", desc: {ru:"Направление",en:"Vector"}},
+    "args": [
+      {
+        "name": "point",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Направление",
+          "en": "Vector"
+        }
+      }
     ],
-    returns: "Vector3"
+    "returns": "Vector3"
   },
   {
-    name: "view.SetViewAngles",
-    desc: {
-      ru: "Меняет ваше направление взгляда",
-      en: "Edits your view angles"
+    "name": "view.SetViewAngles",
+    "desc": {
+      "ru": "Меняет ваше направление взгляда",
+      "en": "Edits your view angles"
     },
-    args: [
-      {name: "vector", type:"Vector3", desc: {ru:"Направление",en:"Angle"}},
+    "args": [
+      {
+        "name": "vector",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Направление",
+          "en": "Angle"
+        }
+      }
     ],
-    returns: "Vector3"
+    "returns": "Vector3"
   },
+  {
+    "name": "hook.Add",
+    "desc": {
+      "ru": "Регистрация обработчика на событие игры",
+      "en": "Registering a handler for an specific event"
+    },
+    "args": [
+      {
+        "name": "hookName",
+        "type": "string",
+        "desc": {
+          "ru": "Идентификатор события",
+          "en": "Event ID"
+        }
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "desc": {
+          "ru": "Произвольный идентификатор",
+          "en": "Custom ID"
+        }
+      },
+      {
+        "name": "func",
+        "type": "function",
+        "desc": {
+          "ru": "Функция-триггер, вызывается при регистрации события",
+          "en": "Trigger function, called when registering an event"
+        },
+      }
+    ],
+    "returns": "nil",
+    "example": "hook.Add(\"Think\", \"test\", function()\n    print(\"function calling every tick\")\nend)"
+  },
+  {
+    "name": "hook.Remove",
+    "desc": {
+      "ru": "Удаление обработчика на событие игры",
+      "en": "Deleting a handler for a game event"
+    },
+    "args": [
+      {
+        "name": "hookName",
+        "type": "string",
+        "desc": {
+          "ru": "Идентификатор события",
+          "en": "Event ID"
+        }
+      },
+      {
+        "name": "id",
+        "type": "string",
+        "desc": {
+          "ru": "Произвольный идентификатор",
+          "en": "Custom ID"
+        }
+      }
+    ],
+    "returns": "nil",
+    "example": "hook.Remove(\"Think\", \"test\")"
+  }
 ];
 
 const docStructs = [
   {
-    name: "Vector2",
-    fields: [
-      { name: "x", type: "float", desc: {ru:"X-координата",en:"X coordinate"} },
-      { name: "y", type: "float", desc: {ru:"Y-координата",en:"Y coordinate"} }
-    ]
-  },
-  {
-    name: "Vector3",
-    fields: [
-      { name: "x", type: "float", desc: {ru:"X-координата",en:"X coordinate"} },
-      { name: "y", type: "float", desc: {ru:"Y-координата",en:"Y coordinate"} },
-      { name: "z", type: "float", desc: {ru:"Z-координата",en:"Z coordinate"} }
-    ]
-  },
-  {
-    name: "Color",
-    fields: [
-      { name: "r", type: "float", desc: {ru:"Красный",en:"Red"} },
-      { name: "g", type: "float", desc: {ru:"Зелёный",en:"Green"} },
-      { name: "b", type: "float", desc: {ru:"Синий",en:"Blue"} },
-      { name: "a", type: "float", desc: {ru:"Прозрачность",en:"Alpha"}  }
-    ]
-  },
-  {
-    name: "Player",
-    noConstructor: true,
-    fields: [
-      { name: "alive", type: "bool",  desc: {ru:"Жив ли игрок", en:"Is player alive"} },
-      { name: "scoped", type: "bool", desc: {ru:"В прицеле ли", en:"Is scoped"} },
-      { name: "health", type: "float",  desc: {ru:"Текущее здоровье", en:"Current health"} },
-      { name: "team", type: "float",  desc: {ru:"Номер команды", en:"Team number"} },
-      { name: "pos", type: "Vector3",  desc: {ru:"Позиция", en:"Position"} },
-      { name: "velocity", type: "Vector3",  desc: {ru:"Скорость", en:"Velocity"} },
-      { name: "name", type: "string",  desc: {ru:"Имя игрока", en:"Player name"} },
-      { name: "pawnAddr", type: "uintptr_t", private: true },
-      { name: "controllerAddr", type: "uintptr_t", private: true }
-    ],
-    methods: [
-      { name: "isValid", args: [], returns: "bool", desc: {ru:"Проверяет валидность игрока", en:"Checks if player valid"} },
-    ]
-  },
-  {
-    name: "Rect",
-    noConstructor: true,
-    fields: [
-      { name: "p1", type: "Vector2", desc: "Top-left corner" },
-      { name: "p2", type: "Vector2", desc: "Bottom-right corner" },
-      { name: "color", type: "Color", desc: "Rectangle color" },
-      { name: "rounding", type: "float", desc: "Corner radius" },
-      { name: "visible", type: "bool", desc: "Is rectangle visible", default: "true" },
-      { name: "destroyed", type: "bool", desc: "Was rectangle destroyed", default: "false" }
-    ]
-  },
-  {
-    name: "Text",
-    noConstructor: true,
-    fields: [
-      { name: "pos", type: "Vector2", desc: "Text position" },
-      { name: "text", type: "string", desc: "Text string" },
-      { name: "color", type: "Color", desc: "Text color" },
-      { name: "size", type: "float", desc: "Font size" },
-      { name: "visible", type: "bool", desc: "Is text visible", default: "true" },
-      { name: "destroyed", type: "bool", desc: "Was text destroyed", default: "false" }
-    ]
-  },
-  {
-    name: "Ents",
-    noConstructor: true,
-    fields: [
-      { name: "clientBase", type: "uintptr_t", private: true }
-    ],
-    methods: [
-      { name: "LocalPlayer", args: [], returns: "Player", desc: {ru:"Локальный игрок", en:"Local player"} },
-      { name: "GetPlayers", 
-        args: [],
-        returns: "table<Player>", 
-        desc: {ru:"Список игроков", en:"List of players"} 
+    "name": "Vector2",
+    "fields": [
+      {
+        "name": "x",
+        "type": "float",
+        "desc": {
+          "ru": "X-координата",
+          "en": "X coordinate"
+        }
+      },
+      {
+        "name": "y",
+        "type": "float",
+        "desc": {
+          "ru": "Y-координата",
+          "en": "Y coordinate"
+        }
       }
     ]
   },
   {
-    name: "world",
-    noConstructor: true,
-    fields: [
-      { name: "ents", type: "Ents" }
+    "name": "Vector3",
+    "fields": [
+      {
+        "name": "x",
+        "type": "float",
+        "desc": {
+          "ru": "X-координата",
+          "en": "X coordinate"
+        }
+      },
+      {
+        "name": "y",
+        "type": "float",
+        "desc": {
+          "ru": "Y-координата",
+          "en": "Y coordinate"
+        }
+      },
+      {
+        "name": "z",
+        "type": "float",
+        "desc": {
+          "ru": "Z-координата",
+          "en": "Z coordinate"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Color",
+    "fields": [
+      {
+        "name": "r",
+        "type": "float",
+        "desc": {
+          "ru": "Красный",
+          "en": "Red"
+        }
+      },
+      {
+        "name": "g",
+        "type": "float",
+        "desc": {
+          "ru": "Зелёный",
+          "en": "Green"
+        }
+      },
+      {
+        "name": "b",
+        "type": "float",
+        "desc": {
+          "ru": "Синий",
+          "en": "Blue"
+        }
+      },
+      {
+        "name": "a",
+        "type": "float",
+        "desc": {
+          "ru": "Прозрачность",
+          "en": "Alpha"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Player",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "alive",
+        "type": "bool",
+        "desc": {
+          "ru": "Жив ли игрок",
+          "en": "Is player alive"
+        }
+      },
+      {
+        "name": "scoped",
+        "type": "bool",
+        "desc": {
+          "ru": "В прицеле ли",
+          "en": "Is scoped"
+        }
+      },
+      {
+        "name": "health",
+        "type": "float",
+        "desc": {
+          "ru": "Текущее здоровье",
+          "en": "Current health"
+        }
+      },
+      {
+        "name": "team",
+        "type": "float",
+        "desc": {
+          "ru": "Номер команды",
+          "en": "Team number"
+        }
+      },
+      {
+        "name": "pos",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Позиция",
+          "en": "Position"
+        }
+      },
+      {
+        "name": "velocity",
+        "type": "Vector3",
+        "desc": {
+          "ru": "Скорость",
+          "en": "Velocity"
+        }
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "desc": {
+          "ru": "Имя игрока",
+          "en": "Player name"
+        }
+      },
+      {
+        "name": "pawnAddr",
+        "type": "uintptr_t",
+        "private": true
+      },
+      {
+        "name": "controllerAddr",
+        "type": "uintptr_t",
+        "private": true
+      }
     ],
-    methods: [
-      { name: "isLoaded", private: true, args: [], returns: "bool", desc: {ru:"Загружен ли мир", en:"Is world loaded"} }
+    "methods": [
+      {
+        "name": "isValid",
+        "args": [],
+        "returns": "bool",
+        "desc": {
+          "ru": "Проверяет валидность игрока",
+          "en": "Checks if player valid"
+        }
+      }
+    ]
+  },
+  {
+    "name": "Rect",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "p1",
+        "type": "Vector2",
+        "desc": "Top-left corner"
+      },
+      {
+        "name": "p2",
+        "type": "Vector2",
+        "desc": "Bottom-right corner"
+      },
+      {
+        "name": "color",
+        "type": "Color",
+        "desc": "Rectangle color"
+      },
+      {
+        "name": "rounding",
+        "type": "float",
+        "desc": "Corner radius"
+      },
+      {
+        "name": "visible",
+        "type": "bool",
+        "desc": "Is rectangle visible",
+        "default": "true"
+      },
+      {
+        "name": "destroyed",
+        "type": "bool",
+        "desc": "Was rectangle destroyed",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "name": "Text",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "pos",
+        "type": "Vector2",
+        "desc": "Text position"
+      },
+      {
+        "name": "text",
+        "type": "string",
+        "desc": "Text string"
+      },
+      {
+        "name": "color",
+        "type": "Color",
+        "desc": "Text color"
+      },
+      {
+        "name": "size",
+        "type": "float",
+        "desc": "Font size"
+      },
+      {
+        "name": "visible",
+        "type": "bool",
+        "desc": "Is text visible",
+        "default": "true"
+      },
+      {
+        "name": "destroyed",
+        "type": "bool",
+        "desc": "Was text destroyed",
+        "default": "false"
+      }
+    ]
+  },
+  {
+    "name": "Ents",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "clientBase",
+        "type": "uintptr_t",
+        "private": true
+      }
+    ],
+    "methods": [
+      {
+        "name": "LocalPlayer",
+        "args": [],
+        "returns": "Player",
+        "desc": {
+          "ru": "Локальный игрок",
+          "en": "Local player"
+        }
+      },
+      {
+        "name": "GetPlayers",
+        "args": [],
+        "returns": "table<Player>",
+        "desc": {
+          "ru": "Список игроков",
+          "en": "List of players"
+        }
+      }
+    ]
+  },
+  {
+    "name": "world",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "ents",
+        "type": "Ents"
+      }
+    ],
+    "methods": [
+      {
+        "name": "isLoaded",
+        "private": true,
+        "args": [
+          {
+            "name": "testArg",
+            "type": "bool",
+          }
+        ],
+        "returns": "bool",
+        "desc": {
+          "ru": "Загружен ли мир",
+          "en": "Is world loaded"
+        }
+      }
     ]
   }
 ];
 
 const docExamples = [
   {
-    title: {ru:"Получить позицию игроков",en:"Get position of all players"},
-    code:
-`for _, player in ipairs(world.ents:GetPlayers()) do
-    if player:isValid() and player:alive() then
-        print(player:pos().x, player:pos().y, player:pos().z)
-    end
-end`
+    "title": {
+      "ru": "Получить позицию игроков",
+      "en": "Get position of all players"
+    },
+    "code": "for _, player in ipairs(world.ents:GetPlayers()) do\n    if player:isValid() and player:alive() then\n        print(player:pos().x, player:pos().y, player:pos().z)\n    end\nend"
   },
   {
-    title: {ru:"Получить здоровье локального игрока",en:"Check hp of local player"},
-    code:
-`localplayer = world.ents:LocalPlayer()
-if localplayer:isValid() then
-    print("HP:", localplayer:health())
-end`
+    "title": {
+      "ru": "Получить здоровье локального игрока",
+      "en": "Check hp of local player"
+    },
+    "code": "localplayer = world.ents:LocalPlayer()\nif localplayer:isValid() then\n    print(\"HP:\", localplayer:health())\nend"
   }
 ];
 
-// Мультиязычная навигация и поисковые лейблы
 const LANGS = {
-  ru: {
+  "ru": {
     "title-main": "CSLua API — Документация",
     "nav-functions": "Функции",
     "nav-classes": "Классы",
-    "nav-examples": "Примеры",
+    "nav-examples": "Примеры"
   },
-  en: {
+  "en": {
     "title-main": "CSLua API — Documentation",
     "nav-functions": "Functions",
     "nav-classes": "Classes",
-    "nav-examples": "Examples",
+    "nav-examples": "Examples"
   }
 };
+
 // ====================================
 
 let currentLang = localStorage.getItem('api_lang') || 'ru';
