@@ -2,9 +2,9 @@
 const icons = {
   function: `<img src="icons/Method.svg" class="vs-icon" alt="Function">`,
   class: `<img src="icons/Class.svg" class="vs-icon" alt="Class">`,
-  example: `<img src="icons/images/CodeDefinitionWindow.svg" class="vs-icon" alt="Example">`,
-  field: `<img src="icons/images/Field.svg" class="vs-icon" alt="Field">`,
-  fieldPrivate: `<img src="icons/images/FieldPrivate.svg" class="vs-icon" alt="Private Field">`,
+  example: `<img src="icons/CodeDefinitionWindow.svg" class="vs-icon" alt="Example">`,
+  field: `<img src="icons/Field.svg" class="vs-icon" alt="Field">`,
+  fieldPrivate: `<img src="icons/FieldPrivate.svg" class="vs-icon" alt="Private Field">`,
   method: `<img src="icons/Method.svg" class="vs-icon" alt="Method">`
 };
 
@@ -176,17 +176,237 @@ window.ApiDocu = ApiDocu;
 // ===== END LIBRARY =====
 
 // ==== YOUR DATA (multi-lang ready, ru/en) ====
-let ApiDocuLangs, docFunctions, docStructs, docExamples, LANGS;
-// Подключаем JSON (лучше всего делать это асинхронно в самом начале)
-fetch('apidocu-data.json')
-  .then(res => res.json())
-  .then(data => {
-    ApiDocuLangs = data.ApiDocuLangs;
-    docFunctions = data.docFunctions;
-    docStructs = data.docStructs;
-    docExamples = data.docExamples;
-    LANGS = data.LANGS;
-  });
+window.ApiDocuLangs = {
+  ru: {
+    field: "Поле",
+    type: "Тип",
+    desc: "Описание",
+    constructor: "Конструктор:",
+    methods: "Методы:",
+    method: "Метод",
+    returns: "Возвращает:",
+    param: "Параметр",
+    example: "Пример"
+  },
+  en: {
+    field: "Field",
+    type: "Type",
+    desc: "Description",
+    constructor: "Constructor:",
+    methods: "Methods:",
+    method: "Method",
+    returns: "Returns:",
+    param: "Parameter",
+    example: "Example"
+  }
+};
+
+const docFunctions = [
+  {
+    name: "draw.rect",
+    desc: {
+      ru: "Рисует прямоугольник по координатам.",
+      en: "Draws a rectangle at the specified coordinates."
+    },
+    args: [
+      {name: "from", type:"Vector2", desc: {ru:"Начальные координаты" ,en: "Start coordinate"}},
+      {name: "to", type:"Vector2", desc: {ru:"Конечные координаты",en:"End coordinate"}},
+    ],
+    returns: "class Rect",
+    example: "draw.rect( Vector2(0,0) , Vector2(200,200) )"
+  },
+  {
+    name: "draw.text",
+    desc: {
+      ru: "Рисует текст по координатам.",
+      en: "Draws text at the specified coordinates."
+    },
+    args: [
+      {name: "position", type: "Vector2", desc: {ru:"Позиция текста" ,en:"Text position"}},
+      {name: "text", type:"string", desc: {ru:"Текст",en:"Text"}},
+      {name: "size", type:"float", desc: {ru:"Размер текста",en:"Text size"}}
+    ],
+    returns: "class Text",
+    example: 'draw.text( Vector2(), "test", 16)'
+  },
+  {
+    name: "view.WorldToScreen",
+    desc: {
+      ru: "Получает координаты объекта на экране.",
+      en: "Gets the coordinates of an object on the screen."
+    },
+    args: [
+      {name: "point", type:"Vector3", desc: {ru:"Позиция в игре",en:"World point"}},
+    ],
+    returns: "Vector2"
+  },
+  {
+    name: "view.CalculateAngles",
+    desc: {
+      ru: "Рассчитывет угол между двумя точками.",
+      en: "Calculates the angle between two points."
+    },
+    args: [
+      {name: "point", type:"Vector3", desc: {ru:"Точка от",en:"Point from"}},
+      {name: "point", type:"Vector3", desc: {ru:"Точка к",en:"Point to"}},
+    ],
+    returns: "Vector3"
+  },
+  {
+    name: "view.Normalize",
+    desc: {
+      ru: "Нормализует вектор(направление).",
+      en: "Normalizes a vector."
+    },
+    args: [
+      {name: "point", type:"Vector3", desc: {ru:"Направление",en:"Vector"}},
+    ],
+    returns: "Vector3"
+  },
+  {
+    name: "view.SetViewAngles",
+    desc: {
+      ru: "Меняет ваше направление взгляда",
+      en: "Edits your view angles"
+    },
+    args: [
+      {name: "vector", type:"Vector3", desc: {ru:"Направление",en:"Angle"}},
+    ],
+    returns: "Vector3"
+  },
+];
+
+const docStructs = [
+  {
+    name: "Vector2",
+    fields: [
+      { name: "x", type: "float", desc: {ru:"X-координата",en:"X coordinate"} },
+      { name: "y", type: "float", desc: {ru:"Y-координата",en:"Y coordinate"} }
+    ]
+  },
+  {
+    name: "Vector3",
+    fields: [
+      { name: "x", type: "float", desc: {ru:"X-координата",en:"X coordinate"} },
+      { name: "y", type: "float", desc: {ru:"Y-координата",en:"Y coordinate"} },
+      { name: "z", type: "float", desc: {ru:"Z-координата",en:"Z coordinate"} }
+    ]
+  },
+  {
+    name: "Color",
+    fields: [
+      { name: "r", type: "float", desc: {ru:"Красный",en:"Red"} },
+      { name: "g", type: "float", desc: {ru:"Зелёный",en:"Green"} },
+      { name: "b", type: "float", desc: {ru:"Синий",en:"Blue"} },
+      { name: "a", type: "float", desc: {ru:"Прозрачность",en:"Alpha"}  }
+    ]
+  },
+  {
+    name: "Player",
+    noConstructor: true,
+    fields: [
+      { name: "alive", type: "bool",  desc: {ru:"Жив ли игрок", en:"Is player alive"} },
+      { name: "scoped", type: "bool", desc: {ru:"В прицеле ли", en:"Is scoped"} },
+      { name: "health", type: "float",  desc: {ru:"Текущее здоровье", en:"Current health"} },
+      { name: "team", type: "float",  desc: {ru:"Номер команды", en:"Team number"} },
+      { name: "pos", type: "Vector3",  desc: {ru:"Позиция", en:"Position"} },
+      { name: "velocity", type: "Vector3",  desc: {ru:"Скорость", en:"Velocity"} },
+      { name: "name", type: "string",  desc: {ru:"Имя игрока", en:"Player name"} },
+      { name: "pawnAddr", type: "uintptr_t", private: true },
+      { name: "controllerAddr", type: "uintptr_t", private: true }
+    ],
+    methods: [
+      { name: "isValid", args: [], returns: "bool", desc: {ru:"Проверяет валидность игрока", en:"Checks if player valid"} },
+    ]
+  },
+  {
+    name: "Rect",
+    noConstructor: true,
+    fields: [
+      { name: "p1", type: "Vector2", desc: "Top-left corner" },
+      { name: "p2", type: "Vector2", desc: "Bottom-right corner" },
+      { name: "color", type: "Color", desc: "Rectangle color" },
+      { name: "rounding", type: "float", desc: "Corner radius" },
+      { name: "visible", type: "bool", desc: "Is rectangle visible", default: "true" },
+      { name: "destroyed", type: "bool", desc: "Was rectangle destroyed", default: "false" }
+    ]
+  },
+  {
+    name: "Text",
+    noConstructor: true,
+    fields: [
+      { name: "pos", type: "Vector2", desc: "Text position" },
+      { name: "text", type: "string", desc: "Text string" },
+      { name: "color", type: "Color", desc: "Text color" },
+      { name: "size", type: "float", desc: "Font size" },
+      { name: "visible", type: "bool", desc: "Is text visible", default: "true" },
+      { name: "destroyed", type: "bool", desc: "Was text destroyed", default: "false" }
+    ]
+  },
+  {
+    name: "Ents",
+    noConstructor: true,
+    fields: [
+      { name: "clientBase", type: "uintptr_t", private: true }
+    ],
+    methods: [
+      { name: "LocalPlayer", args: [], returns: "Player", desc: {ru:"Локальный игрок", en:"Local player"} },
+      { name: "GetPlayers", 
+        args: [],
+        returns: "table<Player>", 
+        desc: {ru:"Список игроков", en:"List of players"} 
+      }
+    ]
+  },
+  {
+    name: "world",
+    noConstructor: true,
+    fields: [
+      { name: "ents", type: "Ents" }
+    ],
+    methods: [
+      { name: "isLoaded", private: true, args: [], returns: "bool", desc: {ru:"Загружен ли мир", en:"Is world loaded"} }
+    ]
+  }
+];
+
+const docExamples = [
+  {
+    title: {ru:"Получить позицию игроков",en:"Get position of all players"},
+    code:
+`for _, player in ipairs(world.ents:GetPlayers()) do
+    if player:isValid() and player:alive() then
+        print(player:pos().x, player:pos().y, player:pos().z)
+    end
+end`
+  },
+  {
+    title: {ru:"Получить здоровье локального игрока",en:"Check hp of local player"},
+    code:
+`localplayer = world.ents:LocalPlayer()
+if localplayer:isValid() then
+    print("HP:", localplayer:health())
+end`
+  }
+];
+
+// Мультиязычная навигация и поисковые лейблы
+const LANGS = {
+  ru: {
+    "title-main": "CSLua API — Документация",
+    "nav-functions": "Функции",
+    "nav-classes": "Классы",
+    "nav-examples": "Примеры",
+  },
+  en: {
+    "title-main": "CSLua API — Documentation",
+    "nav-functions": "Functions",
+    "nav-classes": "Classes",
+    "nav-examples": "Examples",
+  }
+};
+// ====================================
+
 let currentLang = localStorage.getItem('api_lang') || 'ru';
 
 // ========== SIDEBAR RENDER ==========
