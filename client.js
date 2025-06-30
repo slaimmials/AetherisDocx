@@ -252,6 +252,7 @@ const docStructs = [
       { name: "team", type: "float",  desc: {ru:"Номер команды", en:"Team number"} },
       { name: "pos", type: "Vector3",  desc: {ru:"Позиция", en:"Position"} },
       { name: "velocity", type: "Vector3",  desc: {ru:"Скорость", en:"Velocity"} },
+      { name: "name", type: "string",  desc: {ru:"Имя игрока", en:"Player name"} },
       { name: "pawnAddr", type: "uintptr_t", private: true },
       { name: "controllerAddr", type: "uintptr_t", private: true }
     ],
