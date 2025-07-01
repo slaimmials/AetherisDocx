@@ -688,7 +688,7 @@ const docStructs = [
         "desc": "Was text destroyed",
         "default": "false"
       }
-    ]
+    ],
     "methods": [
       {
         "name": "destroy",
