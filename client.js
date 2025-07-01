@@ -2,10 +2,12 @@
 const icons = {
   function: `<img src="icons/Method.svg" class="vs-icon" alt="Function">`,
   class: `<img src="icons/Class.svg" class="vs-icon" alt="Class">`,
-  example: `<img src="icons/CodeDefinitionWindow.svg" class="vs-icon" alt="Example">`,
+  example: `<img src="icons/PrettyCode.svg" class="vs-icon" alt="Example">`,
   field: `<img src="icons/Field.svg" class="vs-icon" alt="Field">`,
   fieldPrivate: `<img src="icons/FieldPrivate.svg" class="vs-icon" alt="Private Field">`,
-  method: `<img src="icons/Method.svg" class="vs-icon" alt="Method">`
+  method: `<img src="icons/Method.svg" class="vs-icon" alt="Method">`,
+  database: `<img src="icons/Database.svg" class="vs-icon" alt="Method">`,
+  reference: `<img src="icons/BookStack.svg" class="vs-icon" alt="Reference">`
 };
 
 // ===== HELPERS =====
@@ -33,74 +35,83 @@ class ApiDocu {
     };
     return `<span style="color:${map[type]||'#fff'}">${type}</span>`;
   }
+static renderBadges(obj) {
+  let html = '';
+  if (obj.private)
+    html += `<span style="background:#c62828;color:#fff;border-radius:3px;padding:0 7px;font-size:0.97em;margin-left:7px;">private</span>`;
+  if (obj.wip)
+    html += `<span style="background:#ffa000;color:#fff;border-radius:3px;padding:0 7px;font-size:0.97em;margin-left:7px;">wip</span>`;
+  return html;
+}
   static renderFieldRow(field, hasDesc) {
-    const icon = field.private ? icons.fieldPrivate : icons.field;
-    return `<tr>
-      <td data-td="field">
-        ${icon}
-        ${
-          field.private
-            ? `<span class="private-fade" style="margin-left:5px;">
-                <span style="color:#64b5f6;">${field.name}</span>
-                <span style="background:#c62828;color:#fff;border-radius:3px;padding:0 7px;font-size:0.97em;margin-left:7px;">private</span>
-              </span>`
-            : `<span style="color:#64b5f6;margin-left:5px;">${field.name}</span>`
-        }
-      </td>
-      <td data-td="type">${
-        field.private
-          ? `<span class="private-fade">${this.colorizeType(field.type)}</span>`
-          : this.colorizeType(field.type)
-      }</td>
+  const icon = field.private ? icons.fieldPrivate : icons.field;
+  return `<tr>
+    <td data-td="field">
+      ${icon}
       ${
-        hasDesc
-          ? `<td data-td="desc">${
-              field.private
-                ? `<span class="private-fade" style="color:#81c784;">${tr(field.desc)}</span>`
-                : (tr(field.desc) ? `<span style="color:#81c784;">${tr(field.desc)}</span>` : '')
-            }</td>`
-          : '<td></td>'
+        field.private || field.wip
+          ? `<span class="private-fade" style="margin-left:5px;">
+              <span style="color:#64b5f6;">${field.name}</span>
+              ${this.renderBadges(field)}
+            </span>`
+          : `<span style="color:#64b5f6;margin-left:5px;">${field.name}</span>`
       }
-    </tr>`;
-  }
-  static renderMethodRow(method, hasDesc) {
-    const argNames = (method.args || []).map(a => a.name).join(', ');
-    const signature = argNames ? `${method.name}(${argNames})` : method.name;
-    let argsBlock = '';
-    if (method.args && method.args.length) {
-      argsBlock = `<div style="margin-left:1.7em;font-size:0.97em;margin-top:2px;">
-        ${method.args.map(
-          arg => `<div><b>${arg.name}</b>: <span style="color:#ba68c8;">${arg.type}</span>${tr(arg.desc) ? ` — <span style="color:#aaa;">${tr(arg.desc)}</span>` : ''}</div>`
-        ).join('')}
-      </div>`;
+    </td>
+    <td data-td="type">${
+      field.private
+        ? `<span class="private-fade">${this.colorizeType(field.type)}</span>`
+        : this.colorizeType(field.type)
+    }</td>
+    ${
+      hasDesc
+        ? `<td data-td="desc">${
+            field.private
+              ? `<span class="private-fade" style="color:#81c784;">${tr(field.desc)}</span>`
+              : (tr(field.desc) ? `<span style="color:#81c784;">${tr(field.desc)}</span>` : '')
+          }</td>`
+        : '<td></td>'
     }
-    return `<tr>
-      <td data-td="method">
-        ${icons.method}
-        ${
-          method.private
-            ? `<span class="private-fade" style="margin-left:5px;">
-                <span style="color:#f2b134;">${signature}</span>
-                <span style="background:#c62828;color:#fff;border-radius:3px;padding:0 7px;font-size:0.97em;margin-left:7px;">private</span>
-                ${argsBlock}
-              </span>`
-            : `<span style="color:#f2b134;margin-left:5px;">${signature}</span>${argsBlock}`
-        }
-      </td>
-      <td data-td="returns" style="vertical-align:top;">
-        ${method.private
-          ? `<span class="private-fade">${ApiDocu.colorizeType(method.returns)}</span>`
-          : ApiDocu.colorizeType(method.returns)
-        }
-      </td>
-      ${hasDesc ? `<td data-td="desc" style="vertical-align:top;">
-        ${method.private
-          ? `<span class="private-fade">${tr(method.desc)||''}</span>`
-          : (tr(method.desc)||'')
-        }
-      </td>` : ''}
-    </tr>`;
+  </tr>`;
+}
+
+static renderMethodRow(method, hasDesc) {
+  const argNames = (method.args || []).map(a => a.name).join(', ');
+  const signature = argNames ? `${method.name}(${argNames})` : method.name;
+  let argsBlock = '';
+  if (method.args && method.args.length) {
+    argsBlock = `<div style="margin-left:1.7em;font-size:0.97em;margin-top:2px;">
+      ${method.args.map(
+        arg => `<div><b>${arg.name}</b>: <span style="color:#ba68c8;">${arg.type}</span>${tr(arg.desc) ? ` — <span style="color:#aaa;">${tr(arg.desc)}</span>` : ''}</div>`
+      ).join('')}
+    </div>`;
   }
+  return `<tr>
+    <td data-td="method">
+      ${icons.method}
+      ${
+        method.private || method.wip
+          ? `<span class="private-fade" style="margin-left:5px;">
+              <span style="color:#f2b134;">${signature}</span>
+              ${this.renderBadges(method)}
+              ${argsBlock}
+            </span>`
+          : `<span style="color:#f2b134;margin-left:5px;">${signature}</span>${argsBlock}`
+      }
+    </td>
+    <td data-td="returns" style="vertical-align:top;">
+      ${method.private
+        ? `<span class="private-fade">${ApiDocu.colorizeType(method.returns)}</span>`
+        : ApiDocu.colorizeType(method.returns)
+      }
+    </td>
+    ${hasDesc ? `<td data-td="desc" style="vertical-align:top;">
+      ${method.private
+        ? `<span class="private-fade">${tr(method.desc)||''}</span>`
+        : (tr(method.desc)||'')
+      }
+    </td>` : ''}
+  </tr>`;
+}
   static renderStruct(s) {
     const hasDesc = s.fields.some(f => f.desc);
     return `<div class="card">
@@ -180,12 +191,34 @@ class ApiDocu {
       <pre class="language-lua"><code class="language-lua">${ex.code}</code></pre>
     </div>`;
   }
+  static renderReference(refGroup) {
+  return `
+    <div class="card">
+      <h2 style="color:#f2b134;">${tr(refGroup.title)}</h2>
+      <table>
+        <tr>
+          <th style="color:#64b5f6;">${ApiDocu._th('name')}</th>
+          <th style="color:#81c784;">${ApiDocu._th('desc')}</th>
+        </tr>
+        ${refGroup.items.map(item => `
+          <tr>
+            <td>
+              <code style="color:#f2b134;">${item.name}</code>
+              ${this.renderBadges(item)}
+            </td>
+            <td>${tr(item.desc)}</td>
+          </tr>
+        `).join('')}
+      </table>
+    </div>
+  `;
+}
   static _th(term) {
     if (window.ApiDocuLangs && window.ApiDocuLangs[window.currentLang||'ru'] && window.ApiDocuLangs[window.currentLang||'ru'][term]) {
       return window.ApiDocuLangs[window.currentLang||'ru'][term];
     }
     const d = {
-      field:'Field', type:'Type', desc:'Description', constructor:'Constructor:', methods:'Methods:', method:'Method', returns:'Returns', param:'Parameter', example:'Example'
+      name: 'Name', field:'Field', type:'Type', desc:'Description', constructor:'Constructor:', methods:'Methods:', method:'Method', returns:'Returns', param:'Parameter', example:'Example'
     };
     return d[term]||term;
   }
@@ -426,6 +459,42 @@ const docFunctions = [
           "en": "Custom ID"
         }
       }
+    ],
+    "returns": "nil",
+    "example": "hook.Remove(\"Think\", \"test\")"
+  },
+  {
+    "name": "util.TraceLine",
+    "desc": {
+      "ru": "Симуляция луча из одной точки в другую",
+      "en": "Simulation of a beam from one point to another"
+    },
+    "args": [
+      {
+        "name": "ray",
+        "type": "Ray",
+        "desc": {
+          "ru": "Идентификатор события",
+          "en": "Event ID"
+        }
+      },
+      {
+        "name": "MASK_SHOT",
+        "type": "int",
+        "desc": {
+          "ru": "Произвольный идентификатор",
+          "en": "Custom ID"
+        }
+      },
+      {
+        "name": "ignore",
+        "type": "table<Player>",
+        "desc": {
+          "ru": "Произвольный идентификатор",
+          "en": "Custom ID"
+        }
+      },
+      
     ],
     "returns": "nil",
     "example": "hook.Remove(\"Think\", \"test\")"
@@ -745,18 +814,66 @@ const docStructs = [
       {
         "name": "isLoaded",
         "private": true,
-        "args": [
-          {
-            "name": "testArg",
-            "type": "bool",
-          }
-        ],
+        "args": [],
         "returns": "bool",
         "desc": {
           "ru": "Загружен ли мир",
           "en": "Is world loaded"
         }
       }
+    ]
+  }
+];
+
+const docReferences = [
+  {
+    key: "hooks",
+    title: {
+      ru: "Доступные хуки",
+      en: "Available Hooks"
+    },
+    items: [
+      {
+        name: "Think",
+        desc: {
+          ru: "Вызывается при каждом обновлении потока DLL",
+          en: "Called every time the DLL thread is updated"
+        }
+      },
+      {
+        name: "DrawGui",
+        desc: {
+          ru: "Вызывается при отрисовке интерфейса",
+          en: "Called when UI is rendered"
+        }
+      },
+      {
+        name: "PlayerDeath",
+        wip: true,
+        desc: {
+          ru: "Вызывается при смерти игрока",
+          en: "Called when player dies"
+        }
+      },
+      {
+        name: "PlayerSpawn",
+        wip: true,
+        desc: {
+          ru: "Вызывается при спавне игрока",
+          en: "Called when player spawning"
+        }
+      }
+      
+    ]
+  },
+  {
+    key: "events",
+    title: {
+      ru: "События игры",
+      en: "Game Events"
+    },
+    items: [
+      // ... список событий
     ]
   }
 ];
@@ -783,13 +900,15 @@ const LANGS = {
     "title-main": "CSLua API — Документация",
     "nav-functions": "Функции",
     "nav-classes": "Классы",
-    "nav-examples": "Примеры"
+    "nav-examples": "Примеры",
+    "nav-references": "Справочники",
   },
   "en": {
     "title-main": "CSLua API — Documentation",
     "nav-functions": "Functions",
     "nav-classes": "Classes",
-    "nav-examples": "Examples"
+    "nav-examples": "Examples",
+    "nav-references": "References",
   }
 };
 
@@ -798,36 +917,117 @@ const LANGS = {
 let currentLang = localStorage.getItem('api_lang') || 'ru';
 
 // ========== SIDEBAR RENDER ==========
+
+const SIDEBAR_SECTIONS = [
+  {
+    key: "functions",
+    titleKey: "nav-functions",
+    items: docFunctions,
+    icon: icons.function,
+    sectionType: "function",
+    defaultOpen: true
+  },
+  {
+    key: "classes",
+    titleKey: "nav-classes",
+    items: docStructs,
+    icon: icons.class,
+    sectionType: "class",
+    defaultOpen: true
+  },
+  {
+    key: "references",
+    titleKey: "nav-references",
+    items: docReferences,
+    icon: icons.database,
+    sectionType: "reference",
+    itemRenderer: (item) => tr(item.title),
+    defaultOpen: true
+  },
+  {
+    key: "examples",
+    titleKey: "nav-examples",
+    items: docExamples,
+    icon: icons.example,
+    sectionType: "example",
+    itemRenderer: (item) => tr(item.title),
+    defaultOpen: false
+  }
+];
+
+let sectionStates = JSON.parse(localStorage.getItem('api_section_states')) || {};
+
 function renderSidebar() {
   const sidebar = document.getElementById('sidebar');
-  sidebar.innerHTML = `
-    <div class="vs-nav-group">
-      <div class="vs-nav-title">${LANGS[currentLang]["nav-functions"]||"Функции"}</div>
-      ${docFunctions.map((f,i)=>`
-        <div class="vs-nav-item" data-section="function" data-index="${i}">${icons.function}<span>${f.name}</span></div>
-      `).join('')}
-    </div>
-    <div class="vs-nav-group">
-      <div class="vs-nav-title">${LANGS[currentLang]["nav-classes"]||"Классы"}</div>
-      ${docStructs.map((s,i)=>`
-        <div class="vs-nav-item" data-section="class" data-index="${i}">${icons.class}<span>${s.name}</span></div>
-      `).join('')}
-    </div>
-    <div class="vs-nav-group">
-      <div class="vs-nav-title">${LANGS[currentLang]["nav-examples"]||"Примеры"}</div>
-      ${docExamples.map((ex,i)=>`
-        <div class="vs-nav-item" data-section="example" data-index="${i}">${icons.example}<span>${tr(ex.title)}</span></div>
-      `).join('')}
-    </div>
-  `;
-  sidebar.querySelectorAll('.vs-nav-item').forEach(item=>{
-    item.onclick = ()=>{
-      sidebar.querySelectorAll('.vs-nav-item').forEach(i=>i.classList.remove('active'));
-      item.classList.add('active');
-      const section = item.dataset.section, idx = +item.dataset.index;
-      renderMain(section, idx);
+  let html = '';
+
+  SIDEBAR_SECTIONS.forEach(section => {
+    const title = LANGS[currentLang][section.titleKey] || section.titleKey;
+    const isOpen = sectionStates[section.key] ?? section.defaultOpen;
+    
+    html += `
+      <div class="vs-nav-group" data-section-key="${section.key}">
+        <div class="vs-nav-title toggle-section">
+          <span class="toggle-icon">${isOpen ? '▼' : '▶'}</span>
+          ${title}
+        </div>
+        <div class="vs-nav-items-container" style="${isOpen ? '' : 'display: none;'}">
+    `;
+
+    section.items.forEach((item, index) => {
+      const label = section.itemRenderer 
+        ? section.itemRenderer(item) 
+        : item.name;
+      
+      html += `
+        <div class="vs-nav-item" 
+             data-section="${section.sectionType}" 
+             data-index="${index}">
+          ${section.icon}
+          <span>${label}</span>
+        </div>
+      `;
+    });
+
+    html += `
+        </div>
+      </div>
+    `;
+  });
+
+  sidebar.innerHTML = html;
+
+  // Обработчики для сворачивания/разворачивания секций
+  sidebar.querySelectorAll('.vs-nav-title.toggle-section').forEach(title => {
+    title.addEventListener('click', function(e) {
+      const group = this.closest('.vs-nav-group');
+      const sectionKey = group.dataset.sectionKey;
+      const container = this.nextElementSibling;
+      
+      const isOpen = container.style.display !== 'none';
+      container.style.display = isOpen ? 'none' : '';
+      
+      const icon = this.querySelector('.toggle-icon');
+      icon.textContent = isOpen ? '▶' : '▼';
+      
+      sectionStates[sectionKey] = !isOpen;
+      localStorage.setItem('api_section_states', JSON.stringify(sectionStates));
+      
+      e.stopPropagation();
+    });
+  });
+
+  // Обработчики для элементов навигации
+  sidebar.querySelectorAll('.vs-nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      sidebar.querySelectorAll('.vs-nav-item').forEach(i => i.classList.remove('active'));
+      this.classList.add('active');
+      
+      const section = this.dataset.section;
+      const index = +this.dataset.index;
+      renderMain(section, index);
       history.replaceState(null, "", "");
-    }
+    });
   });
 }
 
@@ -837,6 +1037,7 @@ function renderMain(section, idx) {
   if (section==='function') main.innerHTML = ApiDocu.renderFunction(docFunctions[idx]);
   if (section==='class') main.innerHTML = ApiDocu.renderStruct(docStructs[idx]);
   if (section==='example') main.innerHTML = ApiDocu.renderExample(docExamples[idx]);
+  if (section === 'reference') main.innerHTML = ApiDocu.renderReference(docReferences[idx]);
   if(window.Prism) Prism.highlightAll();
 }
 
@@ -861,47 +1062,140 @@ function highlightMatches(text, query) {
   const re = new RegExp('('+query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')+')', 'gi');
   return text.replace(re, '<mark>$1</mark>');
 }
+
+// Обновленный поисковый индекс с поддержкой References
 const SEARCH_INDEX = [
-  ...docFunctions.map((f,i)=>({type:'function', name:f.name, section:'function', index:i, label:{ru:'Функция',en:'Function'}})),
-  ...docStructs.map((s,i)=>({type:'class', name:s.name, section:'class', index:i, label:{ru:'Класс',en:'Class'}})),
-  ...docExamples.map((ex,i)=>({type:'example', name:tr(ex.title), section:'example', index:i, label:{ru:'Пример',en:'Example'}}))
+  ...docFunctions.map((f, i) => ({
+    type: 'function',
+    name: f.name,
+    section: 'function',
+    index: i,
+    label: { ru: 'Функция', en: 'Function' }
+  })),
+  ...docStructs.map((s, i) => ({
+    type: 'class',
+    name: s.name,
+    section: 'class',
+    index: i,
+    label: { ru: 'Класс', en: 'Class' }
+  })),
+  ...docExamples.map((ex, i) => ({
+    type: 'example',
+    name: tr(ex.title),
+    section: 'example',
+    index: i,
+    label: { ru: 'Пример', en: 'Example' }
+  })),
+  ...docReferences.flatMap((refGroup, groupIndex) => 
+    refGroup.items.map(item => ({
+      type: 'reference',
+      name: item.name,
+      section: 'reference',
+      groupIndex: groupIndex,
+      itemIndex: refGroup.items.indexOf(item),
+      label: refGroup.title
+    }))
+  )
 ];
+
 const searchInput = document.getElementById('searchInput');
 const searchSuggest = document.getElementById('searchSuggest');
+
+// Обновленный обработчик ввода для поиска
 searchInput.addEventListener('input', function() {
   const q = this.value.trim().toLowerCase();
-  if (!q) { searchSuggest.style.display='none'; searchSuggest.innerHTML=''; return; }
-  const items = SEARCH_INDEX.filter(item => (item.name||'').toLowerCase().includes(q)).slice(0, 10);
-  if(items.length) {
+  if (!q) {
+    searchSuggest.style.display = 'none';
+    searchSuggest.innerHTML = '';
+    return;
+  }
+
+  const items = SEARCH_INDEX.filter(item => 
+    (item.name || '').toLowerCase().includes(q)
+  ).slice(0, 10);
+
+  if (items.length) {
     let html = '<ul>';
     items.forEach(item => {
-      html += `<li data-section="${item.section}" data-index="${item.index}">
-        ${highlightMatches(item.name, q)}
-        <span style="font-size:0.99em;color:#999;margin-left:7px;">${item.label[currentLang]||item.label['ru']}</span>
-      </li>`;
+      const label = typeof item.label === 'object' ? 
+                   item.label[currentLang] || item.label['ru'] : 
+                   tr(item.label);
+      
+      html += `
+        <li data-section="${item.section}" 
+            data-index="${item.index || ''}"
+            data-group-index="${item.groupIndex || ''}"
+            data-item-index="${item.itemIndex || ''}">
+          ${highlightMatches(item.name, q)}
+          <span class="search-item-type">
+            ${label}${item.groupIndex !== undefined ? ` (${tr(docReferences[item.groupIndex].title)})` : ''}
+          </span>
+        </li>
+      `;
     });
-    html+='</ul>';
+    html += '</ul>';
     searchSuggest.innerHTML = html;
     searchSuggest.style.display = 'block';
   } else {
-    searchSuggest.innerHTML = '';
-    searchSuggest.style.display = 'none';
+    searchSuggest.innerHTML = '<div class="no-results">' + 
+      (currentLang === 'ru' ? 'Ничего не найдено' : 'No results found') + 
+      '</div>';
+    searchSuggest.style.display = 'block';
   }
 });
+
+// Обновленный обработчик клика по результатам поиска
 searchSuggest.addEventListener('mousedown', function(e) {
   let li = e.target;
   while (li && li.tagName !== "LI") li = li.parentElement;
   if (!li) return;
+
   const section = li.getAttribute('data-section');
-  const idx = +li.getAttribute('data-index');
-  renderMain(section, idx);
-  document.querySelectorAll('.vs-nav-item').forEach(item=>{
-    if(item.dataset.section===section && +item.dataset.index===idx) item.classList.add('active');
-    else item.classList.remove('active');
+  const index = li.getAttribute('data-index');
+  const groupIndex = li.getAttribute('data-group-index');
+  const itemIndex = li.getAttribute('data-item-index');
+
+  if (section === 'reference') {
+    // Для справочников используем groupIndex и itemIndex
+    const refGroup = docReferences[groupIndex];
+    const refItem = refGroup.items[itemIndex];
+    
+    // Создаем временный объект для рендеринга
+    const tempRef = {
+      title: refGroup.title,
+      items: [refItem] // Показываем только выбранный элемент
+    };
+    
+    renderMain(section, groupIndex);
+    document.getElementById('mainContent').innerHTML = ApiDocu.renderReference(tempRef);
+  } else {
+    // Для других разделов стандартный рендеринг
+    renderMain(section, index);
+  }
+
+  // Подсветка выбранного элемента в сайдбаре
+  document.querySelectorAll('.vs-nav-item').forEach(item => {
+    if (section === 'reference') {
+      // Особый случай для справочников
+      const refItem = document.querySelector(`.vs-nav-item[data-section="reference"][data-index="${groupIndex}"]`);
+      if (refItem) refItem.classList.add('active');
+    } else if (item.dataset.section === section && +item.dataset.index === +index) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
   });
+
   searchSuggest.style.display = 'none';
   searchInput.blur();
-  setTimeout(() => searchInput.value='', 10);
+  setTimeout(() => searchInput.value = '', 10);
+});
+
+// Закрытие поиска при клике вне его
+document.addEventListener('click', function(e) {
+  if (!searchSuggest.contains(e.target)) {
+    searchSuggest.style.display = 'none';
+  }
 });
 
 // ========== ЯЗЫКОВЫЕ КНОПКИ ==========
