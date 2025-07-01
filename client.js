@@ -639,6 +639,17 @@ const docStructs = [
         "desc": "Was rectangle destroyed",
         "default": "false"
       }
+    ],
+    "methods": [
+      {
+        "name": "destroy",
+        "returns": "nil",
+        "desc":{
+          "en": "Удаляет нарисованный квадрат",
+          "ru": "Deletes drawed rectangle"
+        },
+        "example": "rectangle = draw.rect( Vector2() , Vector2() )\nrectangle:destroy()"
+      }
     ]
   },
   {
@@ -676,6 +687,17 @@ const docStructs = [
         "type": "bool",
         "desc": "Was text destroyed",
         "default": "false"
+      }
+    ]
+    "methods": [
+      {
+        "name": "destroy",
+        "returns": "nil",
+        "desc":{
+          "en": "Удаляет нарисованный квадрат",
+          "ru": "Deletes drawed rectangle"
+        },
+        "example": "text = draw.rect( Vector2() , \"Example text\" )\ntext:destroy()"
       }
     ]
   },
