@@ -645,8 +645,8 @@ const docStructs = [
         "name": "destroy",
         "returns": "nil",
         "desc":{
-          "en": "Удаляет нарисованный квадрат",
-          "ru": "Deletes drawed rectangle"
+          "ru": "Удаляет нарисованный квадрат",
+          "en": "Deletes drawed rectangle"
         },
         "example": "rectangle = draw.rect( Vector2() , Vector2() )\nrectangle:destroy()"
       }
@@ -694,8 +694,8 @@ const docStructs = [
         "name": "destroy",
         "returns": "nil",
         "desc":{
-          "en": "Удаляет нарисованный квадрат",
-          "ru": "Deletes drawed rectangle"
+          "ru": "Удаляет нарисованный квадрат",
+          "en": "Deletes drawed rectangle"
         },
         "example": "text = draw.rect( Vector2() , \"Example text\" )\ntext:destroy()"
       }
