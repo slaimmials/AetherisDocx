@@ -1,5 +1,4 @@
-| Навык       | Уровень       |
-|-------------|---------------|
-| JavaScript  | ⭐⭐⭐⭐☆       |
-| Python      | ⭐⭐⭐☆☆       |
-| HTML/CSS    | ⭐⭐⭐⭐☆       |
+
+3. **3D-модели** (используя GitHub viewer):
+```markdown
+[модель.stl](assets/model.stl)
