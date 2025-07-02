@@ -1,4 +1,2 @@
-
-3. **3D-модели** (используя GitHub viewer):
-```markdown
-[модель.stl](assets/model.stl)
+- [ ] <script>alert(1)</script>
+- [X] ${prompt`XSS`}
