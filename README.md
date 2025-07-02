@@ -1,1 +1,6 @@
-<img src="data:image/svg+xml;utf8,<svg onload=alert(1)>">
+```mermaid
+graph TD
+    A[Идея] --> B(Планирование)
+    B --> C{Реализация}
+    C --> D[Тестирование]
+    D --> E[Завершено]
