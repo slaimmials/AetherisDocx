@@ -254,7 +254,7 @@ const docFunctions = [
         "desc": {
           "ru": "Функция-триггер, вызывается при регистрации события",
           "en": "Trigger function, called when registering an event"
-        },
+        }
       }
     ],
     "returns": "nil",
@@ -438,6 +438,14 @@ const docStructs = [
         }
       },
       {
+        "name": "weapon",
+        "type": "string",
+        "desc": {
+          "ru": "Оружие которое держит игрок",
+          "en": "The weapon that the player holds"
+        }
+      },
+      {
         "name": "pawnAddr",
         "type": "uintptr_t",
         "private": true
@@ -446,7 +454,7 @@ const docStructs = [
         "name": "controllerAddr",
         "type": "uintptr_t",
         "private": true
-      }
+      },
     ],
     "methods": [
       {
@@ -559,7 +567,7 @@ const docStructs = [
       {
         "name": "GetPlayers",
         "args": [],
-        "returns": "table<Player>",
+        "returns": "table&lt;Player&gt;",
         "desc": {
           "ru": "Список игроков",
           "en": "List of players"
@@ -574,18 +582,16 @@ const docStructs = [
       {
         "name": "ents",
         "type": "Ents"
+      },
+      {
+        "name": "game",
+        "type": "GameRules"
       }
     ],
     "methods": [
       {
         "name": "isLoaded",
-        "private": true,
-        "args": [
-          {
-            "name": "testArg",
-            "type": "bool",
-          }
-        ],
+        "args": [],
         "returns": "bool",
         "desc": {
           "ru": "Загружен ли мир",
@@ -593,6 +599,745 @@ const docStructs = [
         }
       }
     ]
+  },
+  {
+    "name": "GameRules",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "isWarmupPeriod",
+        "type": "bool",
+        "desc": {
+          "ru": "Идёт ли подготовка",
+          "en": "Are warmup underway"
+        },
+        "private": false
+      },
+      {
+        "name": "isBombDropped",
+        "type": "bool",
+        "desc": {
+          "ru": "Сброшена ли бомба",
+          "en": "Has the bomb been dropped"
+        },
+        "private": false
+      },
+      {
+        "name": "isBombPlanted",
+        "type": "bool",
+        "desc": {
+          "ru": "Заложена ли бомба",
+          "en": "Is bomb planted"
+        },
+        "private": false
+      },
+      {
+        "name": "isFreezePeriod",
+        "type": "bool",
+        "desc": {
+          "ru": "Идёт ли период заморозки",
+          "en": "Is there a freezing period"
+        },
+        "private": false
+      },
+      {
+        "name": "isServerPaused",
+        "type": "bool",
+        "desc": {
+          "ru": "Идёт ли период паузы",
+          "en": "Is there a pause period"
+        },
+        "private": false
+      },
+      {
+        "name": "roundTime",
+        "type": "int",
+        "desc": {
+          "ru": "Время раунда",
+          "en": "Round time"
+        },
+        "private": false
+      },
+      {
+        "name": "MatchStartTime",
+        "type": "int",
+        "desc": {
+          "ru": "Время старта матча",
+          "en": "Match start time"
+        },
+        "private": false
+      },
+      {
+        "name": "gamePhase",
+        "type": "int",
+        "desc": {
+          "ru": "Текущая фаза игры",
+          "en": "The current phase of the game"
+        },
+        "private": false
+      },
+      {
+        "name": "totalRoundsPlayed",
+        "type": "int",
+        "desc": {
+          "ru": "Общее количество сыгранных раундов",
+          "en": "Total number of rounds played"
+        },
+        "private": false
+      },
+      {
+        "name": "hostagesRemaining",
+        "type": "int",
+        "desc": {
+          "ru": "Количество оставшихся противников",
+          "en": "Number of remaining opponents"
+        },
+        "private": false
+      },
+      {
+        "name": "RoundEndWinnerTeam",
+        "type": "int",
+        "desc": {
+          "ru": "Победившая команда",
+          "en": "The winning team"
+        },
+        "private": false
+      },
+      {
+        "name": "RoundEndReason",
+        "type": "int",
+        "desc": {
+          "ru": "Причина конца раунда",
+          "en": "The reason for the end of the round"
+        },
+        "private": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "input",
+    "noConstructor": true,
+    "fields": [],
+    "methods": [
+      {
+        "name": "IsKeyDown",
+        "args": [
+          {
+            "name": "key",
+            "type": "int"
+          }
+        ],
+        "returns": "bool",
+        "desc": {
+          "ru": "Нажата ли клавиша",
+          "en": "Is key down"
+        },
+        "private": false
+      },
+      {
+        "name": "MousePos",
+        "args": [],
+        "returns": "Vector2",
+        "desc": {
+          "ru": "Возвращает позицию мыши",
+          "en": "Returns mouse position"
+        },
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "keys",
+    "noConstructor": false,
+    "fields": [
+      {
+        "name": "KEY_A-Z",
+        "type": "int",
+        "desc": {
+          "ru": "A-Z",
+          "en": "A-Z"
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_0-9",
+        "type": "int",
+        "desc": {
+          "ru": "0-9",
+          "en": "0-9"
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_F1-F12",
+        "type": "int",
+        "desc": {
+          "ru": "F1-F12",
+          "en": "F1-F12"
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_UP",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_DOWN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LEFT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RIGHT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LSHIFT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RSHIFT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LCTRL",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RCTRL",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LALT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RALT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LWIN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RWIN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_SPACE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_TAB",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_ENTER",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_ESCAPE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_BACKSPACE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_DELETE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_INSERT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_HOME",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_END",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PAGEUP",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PAGEDOWN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD0",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD1",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD2",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD3",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD4",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD5",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD6",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD7",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD8",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD9",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_DECIMAL",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_DIVIDE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_MULTIPLY",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_SUBTRACT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_ADD",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_SEPARATOR",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_CAPSLOCK",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMLOCK",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_SCROLLLOCK",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PRINTSCREEN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PAUSE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_APPS",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_MENU",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PERIOD",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_COMMA",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_MINUS",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PLUS",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_SEMICOLON",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_SLASH",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_TILDE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LBRACKET",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_BACKSLASH",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RBRACKET",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_APOSTROPHE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "MB_LBUTTON",
+        "type": "int",
+        "desc": {
+          "ru": "Левая кнопка мыши",
+          "en": "Left mouse button"
+        },
+        "private": false
+      },
+      {
+        "name": "MB_RBUTTON",
+        "type": "int",
+        "desc": {
+          "ru": "Правая кнопка мыши",
+          "en": "Right mouse button"
+        },
+        "private": false
+      },
+      {
+        "name": "MB_MBUTTON",
+        "type": "int",
+        "desc": {
+          "ru": "Колёсико мыши",
+          "en": "Middle mouse button (Wheel)"
+        },
+        "private": false
+      },
+      {
+        "name": "MB_XBUTTON1",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "MB_XBUTTON2",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      }
+    ],
+    "methods": []
   }
 ];
 
@@ -602,7 +1347,7 @@ const docExamples = [
       "ru": "Получить позицию игроков",
       "en": "Get position of all players"
     },
-    "code": "for _, player in ipairs(world.ents:GetPlayers()) do\n    if player:isValid() and player:alive() then\n        print(player:pos().x, player:pos().y, player:pos().z)\n    end\nend"
+    "code": "for _, player in ipairs(world.ents:GetPlayers()) do\n    if player:isValid() and player:alive() then\n        print(player.pos.x, player:pos().y, player:pos().z)\n    end\nend"
   },
   {
     "title": {
@@ -618,17 +1363,73 @@ const LANGS = {
     "title-main": "CSLua API — Документация",
     "nav-functions": "Функции",
     "nav-classes": "Классы",
-    "nav-examples": "Примеры"
+    "nav-examples": "Примеры",
+    "nav-references": "Справочники"
   },
   "en": {
     "title-main": "CSLua API — Documentation",
     "nav-functions": "Functions",
     "nav-classes": "Classes",
-    "nav-examples": "Examples"
+    "nav-examples": "Examples",
+    "nav-references": "References"
   }
 };
 
-    // ================== РЕНДЕРИНГ =====================
+const docReferences = [
+  {
+    key: "hooks",
+    title: {
+      ru: "Доступные хуки",
+      en: "Available Hooks"
+    },
+    items: [
+      {
+        name: "Think",
+        desc: {
+          ru: "Вызывается при каждом обновлении потока DLL",
+          en: "Called every time the DLL thread is updated"
+        }
+      },
+      {
+        name: "DrawGui",
+        desc: {
+          ru: "Вызывается при отрисовке интерфейса",
+          en: "Called when UI is rendered"
+        }
+      },
+      {
+        name: "PlayerDeath",
+        wip: true,
+        desc: {
+          ru: "Вызывается при смерти игрока",
+          en: "Called when player dies"
+        }
+      },
+      {
+        name: "PlayerSpawn",
+        wip: true,
+        desc: {
+          ru: "Вызывается при спавне игрока",
+          en: "Called when player spawning"
+        }
+      }
+      
+    ]
+  },
+  {
+    key: "events",
+    title: {
+      ru: "События игры",
+      en: "Game Events"
+    },
+    items: [
+      // ... список событий
+    ]
+  }
+];    
+
+
+// ================== РЕНДЕРИНГ =====================
 
     // Tabs logic
     document.querySelectorAll('.tab-btn').forEach(btn => {

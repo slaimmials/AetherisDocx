@@ -20,18 +20,21 @@ function tr(val) {
 class ApiDocu {
   static colorizeType(type) {
     const map = {
-      float:   '#ba68c8',
-      int:     '#ba68c8',
-      string:  '#81c784',
-      bool:    '#ffd54f',
-      function:'#f2b134',
-      uint8_t: '#ba68c8',
-      Vector2: '#4bc9a2',
-      Vector3: '#4bc9a2',
-      Color:   '#4bc9a2',
-      Player:  '#4bc9a2',
-      Ents:    '#4bc9a2',
-      world:'#f2b134'
+      float:    '#569cd6',
+      int:      '#569cd6',
+      bool:     '#569cd6',
+      function: '#f2b134',
+      string:   '#4bc9a2',
+      uint8_t:  '#ba68c8',
+      Vector2:  '#4bc9a2',
+      Vector3:  '#4bc9a2',
+      Color:    '#4bc9a2',
+      Player:   '#4bc9a2',
+      Ents:     '#4bc9a2',
+      GameRules:'#4bc9a2',
+      uintptr_t:'#4bc9a2',
+      world:'#f2b134',
+      'table&lt;Player&gt;': '#4bc9a2',
     };
     return `<span style="color:${map[type]||'#fff'}">${type}</span>`;
   }
@@ -233,6 +236,7 @@ window.ApiDocu = ApiDocu;
 // ===== END LIBRARY =====
 
 // ==== YOUR DATA (multi-lang ready, ru/en) ====
+
 window.ApiDocuLangs = {
   "ru": {
     "field": "Поле",
@@ -430,7 +434,7 @@ const docFunctions = [
         "desc": {
           "ru": "Функция-триггер, вызывается при регистрации события",
           "en": "Trigger function, called when registering an event"
-        },
+        }
       }
     ],
     "returns": "nil",
@@ -459,42 +463,6 @@ const docFunctions = [
           "en": "Custom ID"
         }
       }
-    ],
-    "returns": "nil",
-    "example": "hook.Remove(\"Think\", \"test\")"
-  },
-  {
-    "name": "util.TraceLine",
-    "desc": {
-      "ru": "Симуляция луча из одной точки в другую",
-      "en": "Simulation of a beam from one point to another"
-    },
-    "args": [
-      {
-        "name": "ray",
-        "type": "Ray",
-        "desc": {
-          "ru": "Идентификатор события",
-          "en": "Event ID"
-        }
-      },
-      {
-        "name": "MASK_SHOT",
-        "type": "int",
-        "desc": {
-          "ru": "Произвольный идентификатор",
-          "en": "Custom ID"
-        }
-      },
-      {
-        "name": "ignore",
-        "type": "table<Player>",
-        "desc": {
-          "ru": "Произвольный идентификатор",
-          "en": "Custom ID"
-        }
-      },
-      
     ],
     "returns": "nil",
     "example": "hook.Remove(\"Think\", \"test\")"
@@ -650,6 +618,14 @@ const docStructs = [
         }
       },
       {
+        "name": "weapon",
+        "type": "string",
+        "desc": {
+          "ru": "Оружие которое держит игрок",
+          "en": "The weapon that the player holds"
+        }
+      },
+      {
         "name": "pawnAddr",
         "type": "uintptr_t",
         "private": true
@@ -658,7 +634,7 @@ const docStructs = [
         "name": "controllerAddr",
         "type": "uintptr_t",
         "private": true
-      }
+      },
     ],
     "methods": [
       {
@@ -708,17 +684,6 @@ const docStructs = [
         "desc": "Was rectangle destroyed",
         "default": "false"
       }
-    ],
-    "methods": [
-      {
-        "name": "destroy",
-        "returns": "nil",
-        "desc":{
-          "ru": "Удаляет нарисованный квадрат",
-          "en": "Deletes drawed rectangle"
-        },
-        "example": "rectangle = draw.rect( Vector2() , Vector2() )\nrectangle:destroy()"
-      }
     ]
   },
   {
@@ -757,17 +722,6 @@ const docStructs = [
         "desc": "Was text destroyed",
         "default": "false"
       }
-    ],
-    "methods": [
-      {
-        "name": "destroy",
-        "returns": "nil",
-        "desc":{
-          "ru": "Удаляет нарисованный квадрат",
-          "en": "Deletes drawed rectangle"
-        },
-        "example": "text = draw.rect( Vector2() , \"Example text\" )\ntext:destroy()"
-      }
     ]
   },
   {
@@ -793,7 +747,7 @@ const docStructs = [
       {
         "name": "GetPlayers",
         "args": [],
-        "returns": "table<Player>",
+        "returns": "table&lt;Player&gt;",
         "desc": {
           "ru": "Список игроков",
           "en": "List of players"
@@ -808,12 +762,15 @@ const docStructs = [
       {
         "name": "ents",
         "type": "Ents"
+      },
+      {
+        "name": "game",
+        "type": "GameRules"
       }
     ],
     "methods": [
       {
         "name": "isLoaded",
-        "private": true,
         "args": [],
         "returns": "bool",
         "desc": {
@@ -822,8 +779,781 @@ const docStructs = [
         }
       }
     ]
+  },
+  {
+    "name": "GameRules",
+    "noConstructor": true,
+    "fields": [
+      {
+        "name": "isWarmupPeriod",
+        "type": "bool",
+        "desc": {
+          "ru": "Идёт ли подготовка",
+          "en": "Are warmup underway"
+        },
+        "private": false
+      },
+      {
+        "name": "isBombDropped",
+        "type": "bool",
+        "desc": {
+          "ru": "Сброшена ли бомба",
+          "en": "Has the bomb been dropped"
+        },
+        "private": false
+      },
+      {
+        "name": "isBombPlanted",
+        "type": "bool",
+        "desc": {
+          "ru": "Заложена ли бомба",
+          "en": "Is bomb planted"
+        },
+        "private": false
+      },
+      {
+        "name": "isFreezePeriod",
+        "type": "bool",
+        "desc": {
+          "ru": "Идёт ли период заморозки",
+          "en": "Is there a freezing period"
+        },
+        "private": false
+      },
+      {
+        "name": "isServerPaused",
+        "type": "bool",
+        "desc": {
+          "ru": "Идёт ли период паузы",
+          "en": "Is there a pause period"
+        },
+        "private": false
+      },
+      {
+        "name": "roundTime",
+        "type": "int",
+        "desc": {
+          "ru": "Время раунда",
+          "en": "Round time"
+        },
+        "private": false
+      },
+      {
+        "name": "MatchStartTime",
+        "type": "int",
+        "desc": {
+          "ru": "Время старта матча",
+          "en": "Match start time"
+        },
+        "private": false
+      },
+      {
+        "name": "gamePhase",
+        "type": "int",
+        "desc": {
+          "ru": "Текущая фаза игры",
+          "en": "The current phase of the game"
+        },
+        "private": false
+      },
+      {
+        "name": "totalRoundsPlayed",
+        "type": "int",
+        "desc": {
+          "ru": "Общее количество сыгранных раундов",
+          "en": "Total number of rounds played"
+        },
+        "private": false
+      },
+      {
+        "name": "hostagesRemaining",
+        "type": "int",
+        "desc": {
+          "ru": "Количество оставшихся противников",
+          "en": "Number of remaining opponents"
+        },
+        "private": false
+      },
+      {
+        "name": "RoundEndWinnerTeam",
+        "type": "int",
+        "desc": {
+          "ru": "Победившая команда",
+          "en": "The winning team"
+        },
+        "private": false
+      },
+      {
+        "name": "RoundEndReason",
+        "type": "int",
+        "desc": {
+          "ru": "Причина конца раунда",
+          "en": "The reason for the end of the round"
+        },
+        "private": false
+      }
+    ],
+    "methods": []
+  },
+  {
+    "name": "input",
+    "noConstructor": true,
+    "fields": [],
+    "methods": [
+      {
+        "name": "IsKeyDown",
+        "args": [
+          {
+            "name": "key",
+            "type": "int"
+          }
+        ],
+        "returns": "bool",
+        "desc": {
+          "ru": "Нажата ли клавиша",
+          "en": "Is key down"
+        },
+        "private": false
+      },
+      {
+        "name": "MousePos",
+        "args": [],
+        "returns": "Vector2",
+        "desc": {
+          "ru": "Возвращает позицию мыши",
+          "en": "Returns mouse position"
+        },
+        "private": false
+      }
+    ]
+  },
+  {
+    "name": "keys",
+    "noConstructor": false,
+    "fields": [
+      {
+        "name": "KEY_A-Z",
+        "type": "int",
+        "desc": {
+          "ru": "A-Z",
+          "en": "A-Z"
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_0-9",
+        "type": "int",
+        "desc": {
+          "ru": "0-9",
+          "en": "0-9"
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_F1-F12",
+        "type": "int",
+        "desc": {
+          "ru": "F1-F12",
+          "en": "F1-F12"
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_UP",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_DOWN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LEFT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RIGHT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LSHIFT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RSHIFT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LCTRL",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RCTRL",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LALT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RALT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LWIN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RWIN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_SPACE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_TAB",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_ENTER",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_ESCAPE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_BACKSPACE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_DELETE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_INSERT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_HOME",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_END",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PAGEUP",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PAGEDOWN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD0",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD1",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD2",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD3",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD4",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD5",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD6",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD7",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD8",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD9",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_DECIMAL",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_DIVIDE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_MULTIPLY",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_SUBTRACT",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_ADD",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMPAD_SEPARATOR",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_CAPSLOCK",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_NUMLOCK",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_SCROLLLOCK",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PRINTSCREEN",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PAUSE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_APPS",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_MENU",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PERIOD",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_COMMA",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_MINUS",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_PLUS",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_SEMICOLON",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_SLASH",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_TILDE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_LBRACKET",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_BACKSLASH",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_RBRACKET",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "KEY_APOSTROPHE",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "MB_LBUTTON",
+        "type": "int",
+        "desc": {
+          "ru": "Левая кнопка мыши",
+          "en": "Left mouse button"
+        },
+        "private": false
+      },
+      {
+        "name": "MB_RBUTTON",
+        "type": "int",
+        "desc": {
+          "ru": "Правая кнопка мыши",
+          "en": "Right mouse button"
+        },
+        "private": false
+      },
+      {
+        "name": "MB_MBUTTON",
+        "type": "int",
+        "desc": {
+          "ru": "Колёсико мыши",
+          "en": "Middle mouse button (Wheel)"
+        },
+        "private": false
+      },
+      {
+        "name": "MB_XBUTTON1",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      },
+      {
+        "name": "MB_XBUTTON2",
+        "type": "int",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
+        "private": false
+      }
+    ],
+    "methods": []
   }
 ];
+
+const docExamples = [
+  {
+    "title": {
+      "ru": "Получить позицию игроков",
+      "en": "Get position of all players"
+    },
+    "code": "for _, player in ipairs(world.ents:GetPlayers()) do\n    if player:isValid() and player:alive() then\n        print(player.pos.x, player:pos().y, player:pos().z)\n    end\nend"
+  },
+  {
+    "title": {
+      "ru": "Получить здоровье локального игрока",
+      "en": "Check hp of local player"
+    },
+    "code": "localplayer = world.ents:LocalPlayer()\nif localplayer:isValid() then\n    print(\"HP:\", localplayer:health())\nend"
+  }
+];
+
+const LANGS = {
+  "ru": {
+    "title-main": "CSLua API — Документация",
+    "nav-functions": "Функции",
+    "nav-classes": "Классы",
+    "nav-examples": "Примеры",
+    "nav-references": "Справочники"
+  },
+  "en": {
+    "title-main": "CSLua API — Documentation",
+    "nav-functions": "Functions",
+    "nav-classes": "Classes",
+    "nav-examples": "Examples",
+    "nav-references": "References"
+  }
+};
 
 const docReferences = [
   {
@@ -877,40 +1607,6 @@ const docReferences = [
     ]
   }
 ];
-
-const docExamples = [
-  {
-    "title": {
-      "ru": "Получить позицию игроков",
-      "en": "Get position of all players"
-    },
-    "code": "for _, player in ipairs(world.ents:GetPlayers()) do\n    if player:isValid() and player:alive() then\n        print(player:pos().x, player:pos().y, player:pos().z)\n    end\nend"
-  },
-  {
-    "title": {
-      "ru": "Получить здоровье локального игрока",
-      "en": "Check hp of local player"
-    },
-    "code": "localplayer = world.ents:LocalPlayer()\nif localplayer:isValid() then\n    print(\"HP:\", localplayer:health())\nend"
-  }
-];
-
-const LANGS = {
-  "ru": {
-    "title-main": "CSLua API — Документация",
-    "nav-functions": "Функции",
-    "nav-classes": "Классы",
-    "nav-examples": "Примеры",
-    "nav-references": "Справочники",
-  },
-  "en": {
-    "title-main": "CSLua API — Documentation",
-    "nav-functions": "Functions",
-    "nav-classes": "Classes",
-    "nav-examples": "Examples",
-    "nav-references": "References",
-  }
-};
 
 // ====================================
 
