@@ -562,28 +562,13 @@ const docStructs = [
     "noConstructor": true,
     "fields": [
       {
-        "name": "alive",
-        "type": "bool",
-        "desc": {
-          "ru": "Жив ли игрок",
-          "en": "Is player alive"
-        }
-      },
-      {
-        "name": "scoped",
-        "type": "bool",
-        "desc": {
-          "ru": "В прицеле ли",
-          "en": "Is scoped"
-        }
-      },
-      {
         "name": "health",
         "type": "float",
         "desc": {
           "ru": "Текущее здоровье",
           "en": "Current health"
-        }
+        },
+        "private": false
       },
       {
         "name": "team",
@@ -591,23 +576,8 @@ const docStructs = [
         "desc": {
           "ru": "Номер команды",
           "en": "Team number"
-        }
-      },
-      {
-        "name": "pos",
-        "type": "Vector3",
-        "desc": {
-          "ru": "Позиция",
-          "en": "Position"
-        }
-      },
-      {
-        "name": "velocity",
-        "type": "Vector3",
-        "desc": {
-          "ru": "Скорость",
-          "en": "Velocity"
-        }
+        },
+        "private": false
       },
       {
         "name": "name",
@@ -615,7 +585,8 @@ const docStructs = [
         "desc": {
           "ru": "Имя игрока",
           "en": "Player name"
-        }
+        },
+        "private": false
       },
       {
         "name": "weapon",
@@ -623,18 +594,27 @@ const docStructs = [
         "desc": {
           "ru": "Оружие которое держит игрок",
           "en": "The weapon that the player holds"
-        }
+        },
+        "private": false
       },
       {
         "name": "pawnAddr",
         "type": "uintptr_t",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
         "private": true
       },
       {
         "name": "controllerAddr",
         "type": "uintptr_t",
+        "desc": {
+          "ru": "",
+          "en": ""
+        },
         "private": true
-      },
+      }
     ],
     "methods": [
       {
@@ -644,7 +624,48 @@ const docStructs = [
         "desc": {
           "ru": "Проверяет валидность игрока",
           "en": "Checks if player valid"
-        }
+        },
+        "private": false
+      },
+      {
+        "name": "isScoped",
+        "args": [],
+        "returns": "bool",
+        "desc": {
+          "ru": "В прицеле ли игрок",
+          "en": "Is player scoped"
+        },
+        "private": false
+      },
+      {
+        "name": "GetPos",
+        "args": [],
+        "returns": "Vector3",
+        "desc": {
+          "ru": "Возвращает позицию игрока",
+          "en": "Returns the player's position"
+        },
+        "private": false
+      },
+      {
+        "name": "GetVelocity",
+        "args": [],
+        "returns": "Vector3",
+        "desc": {
+          "ru": "Возвращает скорость игрока в пространстве",
+          "en": "Returns the player's speed in space"
+        },
+        "private": false
+      },
+      {
+        "name": "alive",
+        "args": [],
+        "returns": "bool",
+        "desc": {
+          "ru": "Жив ли игрок",
+          "en": "Is the player alive"
+        },
+        "private": false
       }
     ]
   },
