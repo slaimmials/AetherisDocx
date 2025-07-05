@@ -937,6 +937,21 @@ const docStructs = [
         "private": false
       },
       {
+        "name": "IsMouseDown",
+        "args": [
+          {
+            "name": "mb",
+            "type": "int"
+          }
+        ],
+        "returns": "bool",
+        "desc": {
+          "ru": "Нажата ли кнопка мыши",
+          "en": "Is mouse button down"
+        },
+        "private": false
+      },
+      {
         "name": "MousePos",
         "args": [],
         "returns": "Vector2",
